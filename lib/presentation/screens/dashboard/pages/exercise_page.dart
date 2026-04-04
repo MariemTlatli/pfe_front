@@ -269,7 +269,7 @@ class _AdaptiveExercisePageState extends State<AdaptiveExercisePage> {
       exerciseId: exercise.id,
       competenceId: widget.competenceId,
       answer: answer,
-      isCorrect: null,
+      isCorrect: _isCorrect,
       timeSpentSeconds: _timeSpentSeconds,
       hintsUsed: _hintsShown,
       attemptNumber: 1,
@@ -584,17 +584,17 @@ class _AdaptiveExercisePageState extends State<AdaptiveExercisePage> {
             onPressed: () {
               // Navigator.pop(context);
               // Navigator.pop(context); // Retour au menu
-                  final provider = context.read<AdaptiveExerciseProvider>();
-                  final subjectId = provider.state.currentSubjectId;
-                  final hasCurriculum = provider.state.hasCurriculum;
-              Navigator.pushReplacementNamed(
-                  context,
-                  '/curriculum',
-                  arguments: {
-                    'subjectId': subjectId,
-                    'hasCurriculum': hasCurriculum,
-                  },
-                );
+              //     final provider = context.read<AdaptiveExerciseProvider>();
+              //     final subjectId = provider.state.currentSubjectId;
+              //     final hasCurriculum = provider.state.hasCurriculum;
+              // Navigator.pushReplacementNamed(
+              //     context,
+              //     '/curriculum',
+              //     arguments: {
+              //       'subjectId': subjectId,
+              //       'hasCurriculum': hasCurriculum,
+              //     },
+              //   );
             },
             child: const Text('Terminer'),
           ),

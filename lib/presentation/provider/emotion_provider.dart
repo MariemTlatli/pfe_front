@@ -4,7 +4,6 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:front/data/data_sources/emotion_remote_data_source.dart';
 import 'package:front/data/models/emotion_result.dart';
-import 'package:front/data/models/exercise_model.dart';
 import 'package:front/data/models/exercise_submission.dart';
 
 /// Provider pour la gestion de l'état de détection d'émotions.
@@ -22,7 +21,7 @@ class EmotionProvider extends ChangeNotifier {
   DateTime? _lastPredictionTime;
 
   // ── BUFFER DE CAPTURES ─────────────────────────
-  final List<EmotionCaptureModel> _captures = []; // ← EmotionCaptureModel
+  final List<EmotionCaptureData> _captures = []; // ← EmotionCaptureData
   static const int _maxCaptures = 10;
 
   // ── Getters ───────────────────────────────────
@@ -34,7 +33,7 @@ class EmotionProvider extends ChangeNotifier {
   DateTime? get lastPredictionTime => _lastPredictionTime;
 
   /// Liste des captures (lecture seule)
-  List<EmotionCaptureModel> get captures =>
+  List<EmotionCaptureData> get captures =>
       List.unmodifiable(_captures); // ← Model
 
   /// Vérifie si une nouvelle prédiction est nécessaire
@@ -44,7 +43,7 @@ class EmotionProvider extends ChangeNotifier {
   }
 
   /// Retourne l'émotion dominante (la plus fréquente)
-  EmotionCaptureModel? get dominantCapture {
+  EmotionCaptureData? get dominantCapture {
     if (_captures.isEmpty) return null;
 
     final counts = <String, int>{};
@@ -84,7 +83,7 @@ class EmotionProvider extends ChangeNotifier {
   // ── Actions sur le buffer ─────────────────────
 
   /// Ajoute une capture au buffer
-  void addCapture(EmotionCaptureModel capture) {
+  void addCapture(EmotionCaptureData capture) {
     // ← Model
     _captures.add(capture);
 
@@ -99,7 +98,7 @@ class EmotionProvider extends ChangeNotifier {
   /// Ajoute une capture depuis un EmotionResult
   void addCaptureFromResult(EmotionResult result) {
     addCapture(
-      EmotionCaptureModel(
+      EmotionCaptureData(
         // ← Model
         emotion: result.emotion,
         confidence: result.confidence,
@@ -115,28 +114,9 @@ class EmotionProvider extends ChangeNotifier {
   }
 
   /// ✨ NOUVELLE MÉTHODE : Prépare les données pour la soumission
-  EmotionDataModel prepareEmotionSubmissionData() {
-    // Si aucune capture, retourner des données neutres
-    if (_captures.isEmpty) {
-      return EmotionDataModel.neutral();
-    }
-
-    // Calculer l'émotion dominante
-    final dominantCap = dominantCapture!;
-
-    // Calculer la confiance moyenne
-    final avgConf = averageConfidence;
-
-    // Détecter la frustration
-    final hasFrustration = isFrustrationDetected;
-
-    return EmotionDataModel(
-      dominantEmotion: dominantCap.emotion,
-      confidence: dominantCap.confidence,
-      emotionHistory: List.from(_captures), // Copie du buffer
-      frustrationDetected: hasFrustration,
-      averageConfidence: avgConf,
-    );
+  EmotionSubmissionData prepareEmotionSubmissionData() {
+    // Utiliser la factory fromEmotionCaptures qui gère déjà le cas vide
+    return EmotionSubmissionData.fromEmotionCaptures(_captures);
   }
 
   // ── Actions API ───────────────────────────────

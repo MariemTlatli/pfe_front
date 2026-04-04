@@ -361,19 +361,13 @@ class AdaptiveExerciseController extends ChangeNotifier {
       currentMastery = (double.tryParse(masteryStr) ?? 50.0) / 100.0;
     }
 
-    dynamic answer;
-    if (_selectedMultipleAnswers.isNotEmpty) {
-      answer = List<String>.from(_selectedMultipleAnswers);
-    } else {
-      answer = _selectedAnswer ?? '';
-    }
-
     return ExerciseSubmissionModel(
       userId: userId,
       exerciseId: exercise.id,
       competenceId: competenceId,
-      answer: answer,
-      isCorrect: null,
+      answer: _selectedAnswer ?? '',
+      multipleAnswers: _selectedMultipleAnswers.isNotEmpty ? _selectedMultipleAnswers : null,
+      isCorrect: _isCorrect,
       timeSpentSeconds: _timeSpentSeconds,
       hintsUsed: _hintsShown,
       attemptNumber: 1,

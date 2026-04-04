@@ -118,6 +118,8 @@ class AdaptiveExerciseState {
   /// Prochaine étape recommandée
   Map<String, dynamic>? get nextStep =>
       lastDecision?['next_step'] as Map<String, dynamic>?;
+
+
 }
 
 /// Provider pour les exercices adaptatifs

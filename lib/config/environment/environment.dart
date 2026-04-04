@@ -3,7 +3,7 @@ class Environment {
   static const String appVersion = '1.0.0';
 
   // API Configuration
-  static const String baseUrl = 'http://192.168.1.19:5000/api/'; // À changer
+  static const String baseUrl = 'http://192.168.1.18:5000/api/'; // À changer
   static const String apiTimeout = '30'; // secondes
 
   // Feature Flags
