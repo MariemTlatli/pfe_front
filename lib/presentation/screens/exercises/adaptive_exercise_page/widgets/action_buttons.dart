@@ -25,25 +25,23 @@ class ExerciseActionButtons extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, -2),
-          ),
-        ],
+        color: Colors.white.withOpacity(0.05),
+        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
       ),
       child: Row(
         children: [
           if (canGoPrevious && !showResult) ...[
             Expanded(
-              child: OutlinedButton.icon(
+              child: TextButton.icon(
                 onPressed: onPrevious,
-                icon: const Icon(Icons.arrow_back),
-                label: const Text('Précédent'),
+                icon: const Icon(Icons.arrow_back, color: Colors.white54),
+                label: const Text(
+                  'Retour',
+                  style: TextStyle(color: Colors.white54),
+                ),
               ),
             ),
             const SizedBox(width: 12),
@@ -58,36 +56,82 @@ class ExerciseActionButtons extends StatelessWidget {
   }
 
   Widget _buildNextButton() {
-    return ElevatedButton.icon(
-      onPressed: onNext,
-      icon: Icon(isLastExercise ? Icons.check : Icons.arrow_forward),
-      label: Text(isLastExercise ? 'Terminer' : 'Suivant'),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.blue,
-        padding: const EdgeInsets.symmetric(vertical: 16),
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        gradient: const LinearGradient(
+          colors: [Color(0xFF00A2E8), Color(0xFF22B14C)],
+        ),
+      ),
+      child: ElevatedButton.icon(
+        onPressed: onNext,
+        icon: Icon(
+          isLastExercise ? Icons.done_all : Icons.arrow_forward,
+          color: Colors.white,
+        ),
+        label: Text(
+          isLastExercise ? 'TERMINER' : 'SUIVANT',
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.1,
+            color: Colors.white,
+          ),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
+          padding: const EdgeInsets.symmetric(vertical: 18),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+        ),
       ),
     );
   }
 
   Widget _buildValidateButton() {
-    return ElevatedButton.icon(
-      onPressed: hasAnswer && !isSubmitting ? onValidate : null,
-      icon: isSubmitting
-          ? const SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: Colors.white,
-              ),
-            )
-          : const Icon(Icons.check),
-      label: Text(isSubmitting ? 'Envoi...' : 'Valider'),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.green,
-        disabledBackgroundColor: Colors.grey.shade400,
-        padding: const EdgeInsets.symmetric(vertical: 16),
+    bool canPress = hasAnswer && !isSubmitting;
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        gradient: canPress
+            ? const LinearGradient(
+                colors: [Color(0xFFEB1C24), Color(0xFF00A2E8)],
+              )
+            : null,
+        color: !canPress ? Colors.white10 : null,
+      ),
+      child: ElevatedButton.icon(
+        onPressed: canPress ? onValidate : null,
+        icon: isSubmitting
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
+            : const Icon(Icons.check_circle_outline, color: Colors.white),
+        label: Text(
+          isSubmitting ? 'VÉRIFICATION...' : 'VALIDER',
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.1,
+            color: Colors.white,
+          ),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
+          padding: const EdgeInsets.symmetric(vertical: 18),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          disabledForegroundColor: Colors.white24,
+        ),
       ),
     );
   }
+
 }

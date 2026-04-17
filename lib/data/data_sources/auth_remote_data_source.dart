@@ -32,6 +32,13 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       Endpoints.register,
       data: {'username': username, 'email': email, 'password': password},
     );
+    var user_id = response['data']['user']['user_id'];
+    final res = await apiConsumer.get(
+      'gamification/special_cards_init/$user_id',
+    );
+    print("*******************res******************");
+    print(res);
+    print("*******************res******************");
 
     return AuthResponseModel.fromJson(response['data'] ?? response);
   }

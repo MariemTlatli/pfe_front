@@ -1,4 +1,3 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../presentation/provider/auth_provider.dart';
@@ -119,6 +118,25 @@ class HomeScreen extends StatelessWidget {
                       },
                     ),
                   ),
+
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.school),
+                      label: const Text('Acceder au success page'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      onPressed: () {
+                        // Passer l'ID utilisateur
+                        final userId = authProvider.userId ?? '';
+                        Navigator.pushNamed(context, '/success');
+                      },
+                    ),
+                  ),
+
                   const SizedBox(height: 32),
 
                   // User Info Section

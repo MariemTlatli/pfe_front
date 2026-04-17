@@ -44,21 +44,81 @@ class AdaptiveExerciseRemoteDataSource {
       );
       print('   User: $userId, Count: $count, Regenerate: $regenerate');
 
-      final response = await apiConsumer.post(
+      /*final response = await apiConsumer.post(
         'exercises/generate/$competenceId',
         data: {'user_id': userId, 'count': count, 'regenerate': regenerate},
         options: _llmOptions,
-      );
+      );*/
 
-      print('✅ Exercices adaptatifs générés avec succès');
+      // 🧪 MODE MOCK - GÉNÉRATION LOCALE POUR TEST
+      final response = {
+        "status": "success",
+        "competence_id": competenceId,
+        "competence": {
+          "id": competenceId,
+          "name": "Compétence Simulation",
+          "description": "Mode test sans appel API",
+        },
+        "exercises": [
+          {
+            "id": "69dece7328897c89ed8c0900",
+            "type": "vrai_faux",
+            "question": "La Terre est ronde.",
+            "options": ["Vrai", "Faux"],
+            "correct_answer": "Vrai",
+            "hints": ["Pensez aux photos satellite !"],
+            "difficulty": 0.2,
+            "estimated_time": 30,
+          },
+          {
+            "id": "69dece7328897c89ed8c0901",
+            "type": "qcm",
+            "question": "Quel est le moteur de rendu de Flutter ?",
+            "options": ["Skia", "Gecko", "WebKit", "Blink"],
+            "correct_answer": "Skia",
+            "hints": ["C'est une bibliothèque graphique 2D."],
+            "difficulty": 0.4,
+            "estimated_time": 45,
+          },
+        ],
+        "details": [
+          {
+            "id": "69dece7328897c89ed8c0900",
+            "status": "generated",
+            "type": "vrai_faux",
+          },
+          {
+            "id": "69dece7328897c89ed8c0901",
+            "status": "generated",
+            "type": "qcm",
+          },
+        ],
+        "lesson_titles": ["Introduction technique"],
+        "saint_context": {
+          "mastery": 0.65,
+          "zone": "zpd",
+          "optimal_difficulty": 0.35,
+          "hint_level": "moyen",
+          "engagement": "stable",
+          "p_correct": 0.8,
+        },
+        "lessons_count": 1,
+        "requested": count,
+        "generated": 2,
+        "errors": 0,
+        "message": "Simulé localement",
+      };
+
+      print('✅ [MOCK] Exercices adaptatifs simulés');
 
       return AdaptiveExercisesResponseModel.fromJson(
-        response as Map<String, dynamic>,
+        response,
       );
     } catch (e) {
       print('❌ Erreur génération exercices: $e');
       rethrow;
     }
+
   }
 
   // ══════════════════════════════════════════════════════════════

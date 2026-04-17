@@ -27,6 +27,7 @@ class HintsSection extends StatelessWidget {
           },
           icon: const Icon(Icons.lightbulb_outline, size: 18),
           label: Text(
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             initialHintsShown == 0
                 ? 'Afficher un indice'
                 : 'Indice suivant ($initialHintsShown/${hints.length})',
@@ -44,6 +45,7 @@ class HintsSection extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                SizedBox(height: 10),
                 for (int i = 0; i < initialHintsShown; i++)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 8),

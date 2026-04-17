@@ -48,135 +48,14 @@ class _AdaptiveExercisePageState extends State<AdaptiveExercisePage> {
   // ── Soumission ──
   bool _isSubmitting = false;
 
-  // ══════════════════════════════════════════════════════════════
-  // 🧪 MODE TEST
-  // ══════════════════════════════════════════════════════════════
-
-  /// Mettre à true pour utiliser les exercices mock (rapide)
-  /// Mettre à false pour utiliser la vraie API (lent)
-  final bool _useMockData = true;
-
-  // ══════════════════════════════════════════════════════════════
-  // 🧪 MOCK EXERCISES DATA
-  // ══════════════════════════════════════════════════════════════
-
-  List<AdaptiveExerciseModel>? _mockExercises;
-  int _mockCurrentIndex = 0;
-
-  // ══════════════════════════════════════════════════════════════
-  // CYCLE DE VIE
-  // ══════════════════════════════════════════════════════════════
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_useMockData) {
-        // _loadMockExercises();
-        _generateExercises();
-      } else {
-        _generateExercises();
-      }
+      _generateExercises();
     });
   }
-
-  // ══════════════════════════════════════════════════════════════
-  // 🧪 MOCK DATA METHODS
-  // ══════════════════════════════════════════════════════════════
-
-  /// Charge des exercices factices pour tester rapidement
-  void _loadMockExercises() {
-    print('🧪 ══════════════════════════════════════════════════════');
-    print('🧪 CHARGEMENT DES EXERCICES MOCK');
-    print('🧪 ══════════════════════════════════════════════════════');
-
-    _mockExercises = _createMockExercises();
-    _mockCurrentIndex = 0;
-
-    _initializeExercise();
-
-    setState(() {});
-
-    print('✅ ${_mockExercises!.length} exercices MOCK chargés');
-  }
-
-  /// Crée 3 exercices factices pour les tests
-  List<AdaptiveExerciseModel> _createMockExercises() {
-    return [
-      // ── Exercice 1 : QCM simple ──
-      AdaptiveExerciseModel(
-        id: '69caafdea4cc4294998499eb',
-        // competenceId: widget.competenceId,
-        type: 'vrai_faux',
-        question: 'La Terre est plate.',
-        options: ['Vrai', 'Faux'],
-        // correctAnswer: 'Faux',
-        hints: ['Pensez aux photos de la NASA et aux voyages spatiaux !'],
-        difficulty: 0.2,
-        estimatedTime: 30,
-      ),
-
-      // AdaptiveExerciseModel(
-      //   id: '69c9034a9c9b32a1d9fff2a0',
-      //   // competenceId: widget.competenceId,
-      //   type: 'vrai_faux',
-      //   question:
-      //       'Un module Python peut être importé à plusieurs endroits dans le code',
-      //   options: ['Vrai', 'Faux'],
-      //   // correctAnswer: 'Faux',
-      //   hints: ['Pensez aux implications de la circularité des imports'],
-      //   difficulty: 0.1,
-      //   estimatedTime: 30,
-      // ),
-
-      // AdaptiveExerciseModel(
-      //   id: '69c904399c9b32a1d9fff2a1',
-      //   // competenceId: widget.competenceId,
-      //   type: 'texte_a_trous',
-      //   question:
-      //       'Créez un module avec une fonction pour multiplier deux nombres et utilisez-le dans votre code principal.',
-      //   options: [],
-      //   // correctAnswer: ['Python', 'Java', 'JavaScript'],
-      //   hints: [
-      //     'Définissez un module avec la commande `def`.',
-      //     'Utilisez la commande `return` pour retourner la valeur de la fonction.',
-      //   ],
-      //   difficulty: 0.5,
-      //   estimatedTime: 90,
-      // ),
-    ];
-  }
-
-  /// Retourne l'exercice mock actuel
-  AdaptiveExerciseModel? get _currentMockExercise {
-    if (_mockExercises == null || _mockExercises!.isEmpty) return null;
-    if (_mockCurrentIndex >= _mockExercises!.length) return null;
-    return _mockExercises![_mockCurrentIndex];
-  }
-
-  /// Passe à l'exercice mock suivant
-  void _nextMockExercise() {
-    if (_mockCurrentIndex < _mockExercises!.length - 1) {
-      setState(() {
-        _mockCurrentIndex++;
-      });
-      _resetExerciseState();
-    }
-  }
-
-  /// Revient à l'exercice mock précédent
-  void _previousMockExercise() {
-    if (_mockCurrentIndex > 0) {
-      setState(() {
-        _mockCurrentIndex--;
-      });
-      _resetExerciseState();
-    }
-  }
-
-  // ══════════════════════════════════════════════════════════════
-  // MÉTHODES PRINCIPALES
-  // ══════════════════════════════════════════════════════════════
 
   /// Génère les exercices au démarrage (vraie API)
   Future<void> _generateExercises() async {
@@ -190,7 +69,6 @@ class _AdaptiveExercisePageState extends State<AdaptiveExercisePage> {
     _initializeExercise();
   }
 
-  /// Initialise l'état pour un nouvel exercice
   void _initializeExercise() {
     _exerciseStartTime = DateTime.now();
     _timeSpentSeconds = 0;
@@ -234,9 +112,7 @@ class _AdaptiveExercisePageState extends State<AdaptiveExercisePage> {
     String currentZone = 'zpd';
     double currentMastery = 0.5;
 
-    if (_useMockData) {
-      exercise = _currentMockExercise;
-    } else {
+    
       final exerciseProvider = context.read<AdaptiveExerciseProvider>();
       exercise = exerciseProvider.state.currentExercise;
 
@@ -247,7 +123,7 @@ class _AdaptiveExercisePageState extends State<AdaptiveExercisePage> {
         final masteryStr = saintContext!.masteryPercentage.replaceAll('%', '');
         currentMastery = (double.tryParse(masteryStr) ?? 50.0) / 100.0;
       }
-    }
+    
 
     if (exercise == null) {
       throw Exception('Aucun exercice actuel');
@@ -374,16 +250,6 @@ class _AdaptiveExercisePageState extends State<AdaptiveExercisePage> {
         final autoProceed = ui?['auto_proceed'] as bool? ?? false;
         final delaySeconds = ui?['delay_seconds'] as int? ?? 3;
 
-        // Mettre à jour l'UI
-        // setState(() {
-        //   _showResult = true;
-        //   _isCorrect = isCorrect;
-        //   _feedbackMessage = message;
-        //   _encouragementMessage = encouragement;
-        //   _responseType = responseType;
-        //   _nextAction = action;
-        //   _isSubmitting = false;
-        // });
 
         // Logs détaillés
         print('✅ Soumission réussie !');
@@ -392,6 +258,7 @@ class _AdaptiveExercisePageState extends State<AdaptiveExercisePage> {
         print('   ➜ Response Type: $responseType');
         print('   ➜ Message: $message');
         print('   ➜ Encouragement: $encouragement');
+        print('   ➜ show_encouragement: $showEncouragement');
         print('   ➜ Next Action: $action');
         print('   ➜ Difficulty: $difficulty ($difficultyDirection)');
         print('   ➜ Same Competence: $sameCompetence');
@@ -612,22 +479,7 @@ class _AdaptiveExercisePageState extends State<AdaptiveExercisePage> {
 
   /// Passe à l'exercice suivant
   void _goToNextExercise() {
-    if (_useMockData) {
-      // Mode test
-      // if (_mockCurrentIndex < _mockExercises!.length - 1) {
-      //   _nextMockExercise(); // Incrémente l'index + reset state
-      // } else {
-      //   Navigator.pop(context); // Fin de la session
-      // }
-      final provider = context.read<AdaptiveExerciseProvider>();
-
-      if (!provider.state.isLastExercise) {
-        _resetExerciseState(); // 🔁 Réinitialise les réponses, timer, etc.
-        provider.nextExerciseContent(); // 📡 Change l'exercice dans le provider
-      } else {
-        Navigator.pop(context); // ✅ Session terminée
-      }
-    } else {
+   
       // Mode réel avec Provider
       final provider = context.read<AdaptiveExerciseProvider>();
 
@@ -637,7 +489,7 @@ class _AdaptiveExercisePageState extends State<AdaptiveExercisePage> {
       } else {
         Navigator.pop(context); // ✅ Session terminée
       }
-    }
+    
   }
 
   /// Affiche le dialogue de pause
@@ -691,40 +543,9 @@ class _AdaptiveExercisePageState extends State<AdaptiveExercisePage> {
       appBar: AppBar(
         title: Text(widget.competenceName),
         actions: [
-          // 🧪 Badge MODE TEST
-          if (_useMockData)
-            Container(
-              margin: const EdgeInsets.only(right: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.orange,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Text(
-                '🧪 TEST',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-            ),
+          
 
-          // Progression
-          if (_useMockData && _mockExercises != null)
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Text(
-                  '${_mockCurrentIndex + 1} / ${_mockExercises!.length}',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            )
-          else
+          
             Consumer<AdaptiveExerciseProvider>(
               builder: (context, provider, _) {
                 if (provider.state.hasExercises) {
@@ -748,9 +569,7 @@ class _AdaptiveExercisePageState extends State<AdaptiveExercisePage> {
       ),
       body: Stack(
         children: [
-          // Contenu principal
-          _useMockData ? _buildMockContent() : _buildRealContent(),
-
+          _buildRealContent(),
           // Caméra flottante
           const DraggableEmotionCamera(),
         ],
@@ -758,166 +577,6 @@ class _AdaptiveExercisePageState extends State<AdaptiveExercisePage> {
     );
   }
 
-  // ══════════════════════════════════════════════════════════════
-  // 🧪 CONTENU MODE MOCK
-  // ══════════════════════════════════════════════════════════════
-
-  Widget _buildMockContent() {
-    if (_mockExercises == null || _mockExercises!.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    final exercise = _currentMockExercise;
-    if (exercise == null) {
-      return const Center(child: Text('Aucun exercice'));
-    }
-
-    return Column(
-      children: [
-        // Barre de progression
-        _buildMockProgressBar(),
-
-        // Badge SAINT+ Mock
-        _buildMockSaintContextBadge(),
-
-        // Contenu scrollable
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildExerciseHeader(exercise),
-                const SizedBox(height: 16),
-                _buildQuestion(exercise),
-                const SizedBox(height: 24),
-                _buildAnswerOptions(exercise),
-                const SizedBox(height: 16),
-                if (exercise.hints.isNotEmpty) _buildHints(exercise),
-                const SizedBox(height: 24),
-                if (_showResult) _buildResult(),
-              ],
-            ),
-          ),
-        ),
-
-        // Boutons d'action
-        _buildMockActionButtons(),
-      ],
-    );
-  }
-
-  Widget _buildMockProgressBar() {
-    final progress = (_mockCurrentIndex + 1) / _mockExercises!.length;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Column(
-        children: [
-          LinearProgressIndicator(
-            value: progress,
-            backgroundColor: Colors.grey.shade200,
-            valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Exercice ${_mockCurrentIndex + 1} sur ${_mockExercises!.length}',
-            style: const TextStyle(fontSize: 12, color: Colors.grey),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMockSaintContextBadge() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.blue.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.blue.withOpacity(0.3)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.psychology, size: 16, color: Colors.blue),
-          const SizedBox(width: 6),
-          Text(
-            'Zone: ZPD • Maîtrise: 65% (Mock)',
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.blue,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMockActionButtons() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Bouton précédent
-          if (_mockCurrentIndex > 0 && !_showResult)
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: _previousMockExercise,
-                icon: const Icon(Icons.arrow_back),
-                label: const Text('Précédent'),
-              ),
-            ),
-
-          if (_mockCurrentIndex > 0 && !_showResult) const SizedBox(width: 12),
-
-          // Bouton valider ou suivant
-          Expanded(
-            flex: 2,
-            child: _showResult
-                ? _buildMockNextButton()
-                : _buildValidateButton(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMockNextButton() {
-    final isLast = _mockCurrentIndex >= _mockExercises!.length - 1;
-
-    return ElevatedButton.icon(
-      onPressed: () {
-        if (isLast) {
-          Navigator.pop(context);
-        } else {
-          _nextMockExercise();
-        }
-      },
-      icon: Icon(isLast ? Icons.check : Icons.arrow_forward),
-      label: Text(isLast ? 'Terminer' : 'Suivant'),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.blue,
-        padding: const EdgeInsets.symmetric(vertical: 16),
-      ),
-    );
-  }
-
-  // ══════════════════════════════════════════════════════════════
-  // CONTENU MODE RÉEL (API)
-  // ══════════════════════════════════════════════════════════════
 
   Widget _buildRealContent() {
     return Consumer<AdaptiveExerciseProvider>(

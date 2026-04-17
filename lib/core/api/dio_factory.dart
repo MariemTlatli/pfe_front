@@ -7,9 +7,9 @@ class DioFactory {
     final dio = Dio(
       BaseOptions(
         baseUrl: Endpoints.baseUrl,
-        connectTimeout: const Duration(seconds: 30), // 🔥 important
-        receiveTimeout: const Duration(seconds: 30),
-        sendTimeout: const Duration(seconds: 30),
+        connectTimeout: const Duration(seconds: 3000), // 🔥 important
+        receiveTimeout: const Duration(seconds: 3000),
+        sendTimeout: const Duration(seconds: 3000),
         headers: {'Content-Type': 'application/json'},
       ),
     );

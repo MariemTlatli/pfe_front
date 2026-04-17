@@ -13,6 +13,7 @@ enum DecisionActionType {
   nextCompetence,
   adaptDifficulty,
   nextExercise,
+  timeOut,
 }
 
 class DecisionEvent {
@@ -98,6 +99,46 @@ class AdaptiveExerciseController extends ChangeNotifier {
   DecisionEvent? _currentEvent;
   DecisionEvent? get currentEvent => _currentEvent;
 
+  // ── TIMER ──
+  int _remainingSeconds = 0;
+  int get remainingSeconds => _remainingSeconds;
+  Timer? _timer;
+
+  void startTimer() {
+    _timer?.cancel();
+    final exercise = currentExercise;
+    if (exercise == null) return;
+
+    _remainingSeconds = exercise.estimatedTime;
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_remainingSeconds > 0) {
+        _remainingSeconds--;
+        notifyListeners();
+      } else {
+        _timer?.cancel();
+        _handleTimeOut();
+      }
+    });
+  }
+
+  void stopTimer() {
+    _timer?.cancel();
+  }
+
+  void _handleTimeOut() {
+    _showResult = true;
+    _isCorrect = false;
+    _feedbackMessage = "Temps écoulé ! Exercice raté.";
+    _currentEvent = DecisionEvent(
+      actionType: DecisionActionType.timeOut,
+      message: _feedbackMessage,
+      encouragement: "Sois plus rapide la prochaine fois ! 💪",
+      autoProceed: false,
+    );
+    notifyListeners();
+  }
+
+
   // ── ACTIONS ──
   
   void _init() {
@@ -151,8 +192,10 @@ class AdaptiveExerciseController extends ChangeNotifier {
     
     _isGenerating = false;
     _startTime = DateTime.now();
+    startTimer();
     notifyListeners();
   }
+
 
   void selectSingleAnswer(String val) {
     if (_showResult || _isSubmitting) return;
@@ -181,8 +224,10 @@ class AdaptiveExerciseController extends ChangeNotifier {
     if (_isSubmitting || (_selectedAnswer == null && _selectedMultipleAnswers.isEmpty)) return;
     
     _calculateTimeSpent();
+    stopTimer();
     _isSubmitting = true;
     notifyListeners();
+
 
     try {
       Map<String, dynamic> result;
@@ -279,6 +324,7 @@ class AdaptiveExerciseController extends ChangeNotifier {
         _currentIndex++;
         _resetForNext();
         _startTime = DateTime.now();
+        startTimer();
         notifyListeners();
       } else {
         Navigator.of(context).pop();
@@ -302,9 +348,11 @@ class AdaptiveExerciseController extends ChangeNotifier {
         _exercises = provider.state.exercises;
         _currentIndex = provider.state.currentIndex - 1;
         _startTime = DateTime.now();
+        startTimer();
         notifyListeners();
       }
     }
+
   }
 
   void previousExercise() {
@@ -322,6 +370,7 @@ class AdaptiveExerciseController extends ChangeNotifier {
         provider.previousExercise();
         _currentIndex = provider.state.currentIndex - 1;
         _startTime = DateTime.now();
+        startTimer();
         notifyListeners();
       }
     }
@@ -378,7 +427,14 @@ class AdaptiveExerciseController extends ChangeNotifier {
   }
 
 
+  @override
+  void dispose() {
+    stopTimer();
+    super.dispose();
+  }
+
   void clearEvent() {
+
     _currentEvent = null;
     notifyListeners();
   }

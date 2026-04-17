@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:front/data/data_sources/card_relote_data_source.dart';
 import 'package:front/data/data_sources/emotion_remote_data_source.dart';
 import 'package:front/data/data_sources/generate_subject.dart';
+import 'package:front/presentation/provider/card_provider.dart';
 import 'package:front/presentation/provider/emotion_provider.dart';
 import 'package:front/presentation/screens/dashboard/pages/details_page.dart';
 // import 'package:front/presentation/screens/dashboard/pages/exercise_page.dart';
 import 'package:front/presentation/screens/dashboard/pages/lesson_page.dart';
+import 'package:front/presentation/screens/exercice_uno/card_stack_screen_s.dart';
+import 'package:front/presentation/screens/exercice_uno/card_stack_screen_static.dart';
+
 import 'package:front/presentation/screens/exercises/adaptive_exercise_page/adaptive_exercise_page.dart';
+import 'package:front/presentation/screens/home/success_secreen.dart';
 // import 'package:front/presentation/screens/dashboard/pages/mock_exercice_page.dart';
 import 'package:provider/provider.dart';
 import 'core/api/dio_factory.dart';
@@ -77,6 +83,7 @@ void main() async {
   );
   // Emotion
   final emotionDataSource = EmotionRemoteDataSource(apiConsumer: httpConsumer);
+  final cardremoteDatasource = CardRemote_dataSource(apiConsumer: httpConsumer);
 
   runApp(
     MyApp(
@@ -88,6 +95,7 @@ void main() async {
       adaptiveExerciseDataSource: adaptiveExerciseDataSource, // ← NOUVEAU
       localizationProvider: localizationProvider,
       emotionDataSource: emotionDataSource,
+      cardremoteDatasource: cardremoteDatasource,
     ),
   );
 }
@@ -102,6 +110,7 @@ class MyApp extends StatelessWidget {
   adaptiveExerciseDataSource; // ← NOUVEAU
   final LocalizationProvider localizationProvider;
   final EmotionRemoteDataSource emotionDataSource;
+  final dynamic cardremoteDatasource;
 
   const MyApp({
     Key? key,
@@ -113,12 +122,16 @@ class MyApp extends StatelessWidget {
     required this.adaptiveExerciseDataSource, // ← NOUVEAU
     required this.localizationProvider,
     required this.emotionDataSource,
+    required this.cardremoteDatasource,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(
+          create: (_) => CardProvider(dataSource: cardremoteDatasource),
+        ),
         ChangeNotifierProvider.value(value: localizationProvider),
         ChangeNotifierProvider(
           create: (_) => AuthProvider(
@@ -157,6 +170,12 @@ class MyApp extends StatelessWidget {
             home: const SplashScreen(),
             routes: {
               '/login': (context) => const LoginScreen(),
+              '/hand': (context) => const CardStackScreenEdited(
+                userId: '69d78b6e9c8ffb339eb0ced2',
+                difficulty: 0.7,
+              ),
+              '/cap': (context) => const CardStackScreenStatic(),
+              // '/stack': (context) => const CardStackViewPage(),
               '/register': (context) => const RegisterScreen(),
               '/home': (context) => const HomeScreen(),
 
@@ -169,6 +188,17 @@ class MyApp extends StatelessWidget {
                     userId: userId,
                   ),
                   child: DiscoveryPage(userId: userId),
+                );
+              },
+              '/success': (context) {
+                final userId =
+                    ModalRoute.of(context)?.settings.arguments as String? ?? '';
+                return ChangeNotifierProvider(
+                  create: (_) => DiscoveryProvider(
+                    repository: discoveryRepository,
+                    userId: userId,
+                  ),
+                  child: MascotVideo(),
                 );
               },
 

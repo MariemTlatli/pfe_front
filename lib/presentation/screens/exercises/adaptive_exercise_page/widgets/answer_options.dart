@@ -38,37 +38,51 @@ class AnswerOptions extends StatelessWidget {
 
   Widget _buildSingleChoiceOptions() {
     return Column(
-      children: exercise.options.map((option) {
+      children: exercise.options.asMap().entries.map((entry) {
+        final option = entry.value;
+        final index = entry.key;
         final isSelected = selectedAnswer == option;
+        final unoColors = [Color(0xFFEB1C24), Color(0xFF00A2E8), Color(0xFF22B14C), Color(0xFFFFF200)];
+        final accentColor = unoColors[index % unoColors.length];
 
         return Padding(
-          padding: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.only(bottom: 12),
           child: InkWell(
             onTap: showResult ? null : () => onSingleAnswerSelected(option),
-            child: Container(
+            borderRadius: BorderRadius.circular(16),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
               width: double.infinity,
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                color: isSelected ? Colors.blue.shade50 : Colors.white,
-                borderRadius: BorderRadius.circular(12),
+                color: isSelected 
+                    ? accentColor.withOpacity(0.2) 
+                    : Colors.white.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: isSelected ? Colors.blue : Colors.grey.shade300,
-                  width: isSelected ? 2 : 1,
+                  color: isSelected ? accentColor : Colors.white.withOpacity(0.1),
+                  width: isSelected ? 2.5 : 1,
                 ),
               ),
               child: Row(
                 children: [
-                  Icon(
-                    isSelected ? Icons.radio_button_checked : Icons.radio_button_off,
-                    color: isSelected ? Colors.blue : Colors.grey,
+                   Container(
+                    width: 24, height: 24,
+                    decoration: BoxDecoration(
+                      color: isSelected ? accentColor : Colors.transparent,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: isSelected ? accentColor : Colors.white24, width: 2),
+                    ),
+                    child: isSelected ? const Icon(Icons.check, size: 16, color: Colors.black) : null,
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 16),
                   Expanded(
                     child: Text(
                       option,
                       style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                        color: Colors.white,
+                        fontSize: 17,
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                       ),
                     ),
                   ),
@@ -86,51 +100,59 @@ class AnswerOptions extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Sélectionnez plusieurs réponses :',
-          style: TextStyle(fontSize: 14, color: Colors.grey),
+          'SÉLECTION MULTIPLE',
+          style: TextStyle(fontSize: 12, color: Colors.white38, fontWeight: FontWeight.bold, letterSpacing: 1.2),
         ),
-        const SizedBox(height: 8),
-        ...exercise.options.map((option) {
+        const SizedBox(height: 12),
+        ...exercise.options.asMap().entries.map((entry) {
+          final option = entry.value;
+          final index = entry.key;
           final isSelected = selectedMultipleAnswers.contains(option);
+          final unoColors = [Color(0xFF00A2E8), Color(0xFF22B14C), Color(0xFFFFF200), Color(0xFFEB1C24)];
+          final accentColor = unoColors[index % unoColors.length];
 
           return Padding(
-            padding: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.only(bottom: 12),
             child: InkWell(
               onTap: showResult
                   ? null
                   : () {
                       final newList = List<String>.from(selectedMultipleAnswers);
-                      if (isSelected) {
-                        newList.remove(option);
-                      } else {
-                        newList.add(option);
-                      }
+                      if (isSelected) newList.remove(option); else newList.add(option);
                       onMultipleAnswersSelected(newList);
                     },
-              child: Container(
+              borderRadius: BorderRadius.circular(16),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
                 width: double.infinity,
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
-                  color: isSelected ? Colors.blue.shade50 : Colors.white,
-                  borderRadius: BorderRadius.circular(12),
+                  color: isSelected ? accentColor.withOpacity(0.2) : Colors.white.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: isSelected ? Colors.blue : Colors.grey.shade300,
-                    width: isSelected ? 2 : 1,
+                    color: isSelected ? accentColor : Colors.white.withOpacity(0.1),
+                    width: isSelected ? 2.5 : 1,
                   ),
                 ),
                 child: Row(
                   children: [
-                    Icon(
-                      isSelected ? Icons.check_box : Icons.check_box_outline_blank,
-                      color: isSelected ? Colors.blue : Colors.grey,
+                    Container(
+                      width: 24, height: 24,
+                      decoration: BoxDecoration(
+                        color: isSelected ? accentColor : Colors.transparent,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: isSelected ? accentColor : Colors.white24, width: 2),
+                      ),
+                      child: isSelected ? const Icon(Icons.check, size: 18, color: Colors.black) : null,
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 16),
                     Expanded(
                       child: Text(
                         option,
                         style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                          color: Colors.white,
+                          fontSize: 17,
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                         ),
                       ),
                     ),
@@ -143,6 +165,7 @@ class AnswerOptions extends StatelessWidget {
       ],
     );
   }
+
 
   Widget _buildTextInput() {
     return TextField(
