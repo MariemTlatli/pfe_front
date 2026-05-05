@@ -94,7 +94,14 @@ class DiscoveryProvider extends ChangeNotifier {
   Future<void> getSubjectsForDomain(String domainId) async {
     _updateState(state.copyWith(isLoading: true, error: null));
     try {
-      final domain = state.domains.firstWhere((d) => d.id == domainId);
+      // Find domain safely
+      DomainModel? domain;
+      try {
+        domain = state.domains.firstWhere((d) => d.id == domainId);
+      } catch (_) {
+        // Domain list might not be loaded yet
+      }
+
       final subjects = await _repository.getSubjectsForDomain(domainId);
       _updateState(state.copyWith(
         selectedDomain: domain,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:front/data/models/special_cards_model.dart';
+import 'package:front/presentation/widgets/uno_card.dart';
 import '../models/card_collection.dart';
 import 'card_grid.dart';
 
@@ -111,14 +112,25 @@ class _CardDialogState extends State<CardDialog> {
         children: [
           Expanded(
             flex: 4,
-            child: const Text(
-              'Cartes Spéciales',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+            child: UnoCard(
+              height: 45,
+              width: 220,
+              label: 'Cartes Spéciales',
+              onTap: () {}, // Optional action
+              content: const Center(
+                child: Text(
+                  'Cartes Spéciales',
+                  style: TextStyle(
+                    color: Color(0xFF424242),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    letterSpacing: 2,
+                  ),
+                ),
               ),
             ),
+
+            
           ),
 
           Expanded(

@@ -1,9 +1,12 @@
 // lib/data/data_sources/adaptive_exercise_remote_data_source.dart
 
+import 'dart:math';
+
 import 'package:dio/dio.dart';
 import 'package:front/core/api/api_consumer.dart';
 import 'package:front/data/models/exercise_model.dart';
 import 'package:front/data/models/exercise_submission.dart';
+import 'package:front/presentation/screens/exercises/adaptive_exercise_page/mock_data.dart';
 
 /// Data Source pour les exercices adaptatifs avec SAINT+
 class AdaptiveExerciseRemoteDataSource {
@@ -37,88 +40,47 @@ class AdaptiveExerciseRemoteDataSource {
     required String userId,
     int count = 3,
     bool regenerate = false,
+    double? difficulty,
+    List<String>? exerciseTypes,
   }) async {
     try {
       print(
         '🎯 Génération exercices adaptatifs pour compétence $competenceId...',
       );
-      print('   User: $userId, Count: $count, Regenerate: $regenerate');
+      print(
+        '   User: $userId, Count: $count, Regenerate: $regenerate, Difficulty: $difficulty, Types: $exerciseTypes',
+      );
 
-      /*final response = await apiConsumer.post(
-        'exercises/generate/$competenceId',
-        data: {'user_id': userId, 'count': count, 'regenerate': regenerate},
-        options: _llmOptions,
-      );*/
-
-      // 🧪 MODE MOCK - GÉNÉRATION LOCALE POUR TEST
-      final response = {
-        "status": "success",
-        "competence_id": competenceId,
-        "competence": {
-          "id": competenceId,
-          "name": "Compétence Simulation",
-          "description": "Mode test sans appel API",
-        },
-        "exercises": [
-          {
-            "id": "69dece7328897c89ed8c0900",
-            "type": "vrai_faux",
-            "question": "La Terre est ronde.",
-            "options": ["Vrai", "Faux"],
-            "correct_answer": "Vrai",
-            "hints": ["Pensez aux photos satellite !"],
-            "difficulty": 0.2,
-            "estimated_time": 30,
-          },
-          {
-            "id": "69dece7328897c89ed8c0901",
-            "type": "qcm",
-            "question": "Quel est le moteur de rendu de Flutter ?",
-            "options": ["Skia", "Gecko", "WebKit", "Blink"],
-            "correct_answer": "Skia",
-            "hints": ["C'est une bibliothèque graphique 2D."],
-            "difficulty": 0.4,
-            "estimated_time": 45,
-          },
-        ],
-        "details": [
-          {
-            "id": "69dece7328897c89ed8c0900",
-            "status": "generated",
-            "type": "vrai_faux",
-          },
-          {
-            "id": "69dece7328897c89ed8c0901",
-            "status": "generated",
-            "type": "qcm",
-          },
-        ],
-        "lesson_titles": ["Introduction technique"],
-        "saint_context": {
-          "mastery": 0.65,
-          "zone": "zpd",
-          "optimal_difficulty": 0.35,
-          "hint_level": "moyen",
-          "engagement": "stable",
-          "p_correct": 0.8,
-        },
-        "lessons_count": 1,
-        "requested": count,
-        "generated": 2,
-        "errors": 0,
-        "message": "Simulé localement",
+      final data = {
+        'user_id': userId,
+        'count': count,
+        'regenerate': regenerate,
       };
 
-      print('✅ [MOCK] Exercices adaptatifs simulés');
+      if (difficulty != null) data['difficulty'] = difficulty;
+      if (exerciseTypes != null) data['exercise_types'] = exerciseTypes;
+
+      final response = await apiConsumer.post(
+        'exercises/generate/$competenceId',
+        data: data,
+        options: _llmOptions,
+      );
+      // 🔹 Instanciation directe
+      // final AdaptiveExercisesResponseModel mockResponse =
+      //     AdaptiveExercisesResponseModel.fromJson(mockAdaptiveExercisesJson);
+
+      // final response = {"exercises": exercises};
+      print('✅ Exercices adaptatifs générés avec succès');
 
       return AdaptiveExercisesResponseModel.fromJson(
         response,
       );
+      // return mockResponse;
+      
     } catch (e) {
       print('❌ Erreur génération exercices: $e');
       rethrow;
     }
-
   }
 
   // ══════════════════════════════════════════════════════════════
@@ -172,14 +134,85 @@ class AdaptiveExerciseRemoteDataSource {
       final decision = result['decision'] as Map<String, dynamic>?;
 
       print('   ➜ Correct: $isCorrect');
-      print('   ➜ Action: ${decision?['action']}');
-      print('   ➜ Message: ${decision?['message']}');
+      if (decision != null) {
+        print('   ➜ Action: ${decision['action']}');
+        print('   ➜ Message: ${decision['message']}');
+
+        // 🎴 Récupération de la NUMBER CARD
+        if (decision.containsKey('looted_card')) {
+          final lootedCard = decision['looted_card'];
+          print(
+            '   🎁 CARTE OBTENUE (LOOTED): Couleur "${lootedCard['color']}", Numéro "${lootedCard['number']}"',
+          );
+        }
+      }
 
       return result;
+
+      // ══════════════════════════════════════════════════════════════
+      // GAMIFICATION ÉMOTIONNELLE
+      // ══════════════════════════════════════════════════════════════
+
+  
     } catch (e) {
       print('❌ Erreur soumission réponse: $e');
       rethrow;
     }
+}
+/// POST - Attribue carte Inversion (Happy >= 5)
+  Future<Map<String, dynamic>> attribuerInversion(String userId) async {
+    try {
+      final res = await apiConsumer.post(
+        'gamification/inversion/$userId/attribuer-par-emotion',
+      );
+      return res as Map<String, dynamic>;
+    } catch (e) {
+      return {"success": false, "message": e.toString()};
+    }
+  }
+
+  /// POST - Attribue carte Joker (Sad >= 5)
+  Future<Map<String, dynamic>> attribuerJoker(String userId) async {
+    try {
+      final res = await apiConsumer.post(
+        'gamification/joker/$userId/attribuer-par-emotion',
+      );
+      return res as Map<String, dynamic>;
+    } catch (e) {
+      return {"success": false, "message": e.toString()};
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // NUMBER CARDS (CRAFTING)
+  // ══════════════════════════════════════════════════════════════
+
+  /// GET - Récupère l'inventaire de cartes chiffrées
+  Future<Map<String, dynamic>> getNumberCardsInventory(String userId) async {
+    try {
+      final response = await apiConsumer.get(
+        'gamification/number-cards/$userId',
+      );
+      return response as Map<String, dynamic>;
+    } catch (e) {
+      return {"success": false, "inventory": {}};
+    }
+  }
+
+  /// POST - Demande à fusionner deux cartes du même type
+  Future<Map<String, dynamic>> mergeNumberCards(
+    String userId,
+    String color,
+    int baseNumber,
+  ) async {
+    try {
+      final response = await apiConsumer.post(
+        'gamification/number-cards/$userId/merge',
+        data: {"color": color, "base_number": baseNumber},
+      );
+      return response as Map<String, dynamic>;
+    } catch (e) {
+      return {"success": false, "message": "Erreur réseau."};
+    }
   }
 }
-

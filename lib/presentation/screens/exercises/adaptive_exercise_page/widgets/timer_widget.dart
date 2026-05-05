@@ -12,35 +12,98 @@ class ExerciseTimerWidget extends StatelessWidget {
         final remaining = controller.remainingSeconds;
         final isLow = remaining < 10;
 
+        // Couleurs dynamiques selon l'état du timer (style UnoCard rouge)
+        final colorBase = isLow
+            ? const Color.fromARGB(255, 228, 1, 1) // Rouge foncé base (alarme)
+            : const Color.fromARGB(
+                255,
+                191,
+                26,
+                26,
+              ); // Rouge foncé base (normal)
+
+        final gradientTop = isLow
+            ? const Color.fromARGB(
+                255,
+                255,
+                0,
+                0,
+              ) // Rouge très clair haut (alarme)
+            : const Color.fromARGB(
+                255,
+                255,
+                0,
+                25,
+              ); // Rouge clair haut (normal)
+
+        final gradientBottom = isLow
+            ? const Color.fromARGB(255, 236, 37, 37) // Rouge moyen bas (alarme)
+            : const Color.fromARGB(
+                255,
+                230,
+                67,
+                67,
+              ); // Rouge moyen bas (normal)
+
+        final colorText = const Color.fromARGB(
+          255,
+          255,
+          255,
+          255,
+        ); // Texte rouge très foncé
+        final borderColor = isLow ? const Color(0xFFFFF0F0) : Colors.white;
+
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          height: 40,
           decoration: BoxDecoration(
-            color: isLow ? Colors.red.withOpacity(0.2) : Colors.white.withOpacity(0.05),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: isLow ? Colors.redAccent : Colors.white24,
-              width: 1.5,
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.timer,
-                size: 18,
-                color: isLow ? Colors.redAccent : Colors.white70,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                _formatTime(remaining),
-                style: TextStyle(
-                  color: isLow ? Colors.redAccent : Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                  fontFamily: 'monospace',
-                ),
+            // Partie "3D" du bas (comme UnoCard)
+            color: colorBase,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 6,
+                offset: const Offset(0, 3),
               ),
             ],
+          ),
+          child: Container(
+            // Marge inférieure pour révéler la partie 3D (pattern UnoCard)
+            margin: const EdgeInsets.only(bottom: 5),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 24,
+            ), // ← Augmente de 16 à 24 ou plus
+
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              // Gradient vertical comme UnoCard (mais en rouge)
+              gradient: LinearGradient(
+                colors: [gradientTop, gradientBottom],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+              border: Border.all(
+                color: borderColor, width: 1.5),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.timer_outlined, size: 20, color: colorText),
+                const SizedBox(width: 8),
+                Text(
+                  _formatTime(remaining),
+                  style: TextStyle(
+                    color: colorText,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 16,
+                    fontFamily: 'monospace',
+                    letterSpacing: 1.2,
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },

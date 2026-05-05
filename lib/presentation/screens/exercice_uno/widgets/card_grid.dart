@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:front/presentation/widgets/uno_card.dart';
 import '../models/card_collection.dart';
 import 'card_item.dart';
 
@@ -97,14 +98,25 @@ class CardGrid extends StatelessWidget {
                 vertical: 12.0,
                 horizontal: 8.0,
               ),
+              child: UnoCard(
+                height: 45,
+                width: 220,
+                label: 'Cartes Spéciales',
+                onTap: () {}, // Optional action
+                content: const Center(
               child: Text(
-                'Cartes Spéciales',
-                style: TextStyle(
-                  color: Colors.amber,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
+                    'Cartes Spéciales',
+                    style: TextStyle(
+                      color: Color(0xFF424242),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      letterSpacing: 2,
+                    ),
+                  ),
                 ),
               ),
+
+              
             ),
             GridView.builder(
               shrinkWrap: true,
@@ -137,7 +149,7 @@ class CardGrid extends StatelessWidget {
                       child: Text(
                         specialName,
                         style: const TextStyle(
-                          color: Colors.amber,
+                          color: const Color.fromARGB(255, 2, 90, 172),
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
                         ),

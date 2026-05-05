@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:front/presentation/provider/auth_provider.dart';
+import 'package:front/presentation/widgets/uno_button.dart';
+import 'package:front/presentation/widgets/uno_card.dart';
 import 'package:provider/provider.dart';
 import 'package:front/presentation/provider/lesson_provider.dart';
 import 'package:front/data/models/lesson_model.dart';
@@ -41,7 +43,23 @@ class _LessonsPageState extends State<LessonsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.competenceName),
+        title: UnoCard(
+          height: 45,
+          width: 220,
+          label: widget.competenceName,
+          onTap: () {}, // Optional action
+          content: Center(
+            child: Text(
+              widget.competenceName,
+              style: TextStyle(
+                color: Color(0xFF424242),
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                letterSpacing: 2,
+              ),
+            ),
+          ),
+        ),
         actions: [
           Consumer<LessonProvider>(
             builder: (context, provider, _) {
@@ -173,154 +191,30 @@ class _LessonsPageState extends State<LessonsPage> {
 
   /// Contenu des leçons
   Widget _buildLessonsContent(LessonState state, LessonProvider provider) {
-    return Column(
-      children: [
-        // Header avec infos
-        _buildHeaderCard(state),
-
+    return UnoCard(
+      height: double.infinity,
+      width: double.infinity,
+      label: widget.competenceName,
+      onTap: () {}, // Optional action
+      content: Column(
+        children: [
         // Liste des leçons ou vue détaillée
         Expanded(
-          child: state.selectedLesson != null
-              ? _buildLessonDetail(state, provider)
-              : _buildLessonsList(state, provider),
+          child: _buildLessonDetail(state, provider)
+              
         ),
-      ],
-    );
-  }
-
-  /// Header avec informations
-  Widget _buildHeaderCard(LessonState state) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.blue.shade50,
-        border: Border(
-          bottom: BorderSide(color: Colors.blue.shade100),
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.menu_book, color: Colors.blue.shade700, size: 28),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '${state.lessonsCount} leçon${state.lessonsCount > 1 ? 's' : ''}',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  'Durée totale : ${state.totalTime}',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade700,
-                  ),
-                ),
-              ],
-            ),
-          ),
         ],
       ),
-    );
+    )
+    
+    ;
   }
-
-  /// Liste des leçons
-  Widget _buildLessonsList(LessonState state, LessonProvider provider) {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: state.lessons.length,
-      itemBuilder: (context, index) {
-        final lesson = state.lessons[index];
-        return _buildLessonCard(lesson, provider);
-      },
-    );
-  }
-
-  /// Card d'une leçon
-  Widget _buildLessonCard(LessonModel lesson, LessonProvider provider) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: Colors.blue,
-          child: Text(
-            '${lesson.order}',
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-        title: Text(
-          lesson.title,
-          style: const TextStyle(fontWeight: FontWeight.w600),
-        ),
-        subtitle: Text(
-          '${lesson.estimatedTime ?? 15} min',
-          style: const TextStyle(color: Colors.grey),
-        ),
-        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-        onTap: () {
-          provider.selectLesson(lesson);
-        },
-      ),
-    );
-  }
-
   /// Vue détaillée d'une leçon
   Widget _buildLessonDetail(LessonState state, LessonProvider provider) {
     final lesson = state.selectedLesson!;
 
     return Column(
       children: [
-        // Barre de navigation
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade100,
-            border: Border(
-              bottom: BorderSide(color: Colors.grey.shade300),
-            ),
-          ),
-          child: Row(
-            children: [
-              // Bouton retour à la liste
-              TextButton.icon(
-                onPressed: () {
-                  provider.clearSelectedLesson();
-                },
-                icon: const Icon(Icons.list, size: 18),
-                label: const Text('Liste'),
-              ),
-              const Spacer(),
-              // Navigation entre leçons
-              IconButton(
-                onPressed: provider.canGoPrevious
-                    ? () => provider.previousLesson()
-                    : null,
-                icon: const Icon(Icons.chevron_left),
-                tooltip: 'Leçon précédente',
-              ),
-              Text(
-                '${lesson.order} / ${state.lessonsCount}',
-                style: const TextStyle(fontWeight: FontWeight.w500),
-              ),
-              IconButton(
-                onPressed: provider.canGoNext
-                    ? () => provider.nextLesson()
-                    : null,
-                icon: const Icon(Icons.chevron_right),
-                tooltip: 'Leçon suivante',
-              ),
-            ],
-          ),
-        ),
-
         // Contenu de la leçon
         Expanded(
           child: SingleChildScrollView(
@@ -360,18 +254,25 @@ class _LessonsPageState extends State<LessonsPage> {
 
         // Bouton suivant en bas
         if (provider.canGoNext)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            child: ElevatedButton.icon(
-              onPressed: () => provider.nextLesson(),
-              icon: const Icon(Icons.arrow_forward),
-              label: const Text('Leçon suivante'),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-              ),
-            ),
+          UnoButton(
+            label: 'Leçon suivante',
+            isLoading: false,
+            isEnabled: true,
+            onPressed: () => provider.nextLesson(),
           ),
+
+        // Container(
+        //   width: double.infinity,
+        //   padding: const EdgeInsets.all(16),
+        //   child: ElevatedButton.icon(
+        //     onPressed: () => provider.nextLesson(),
+        //     icon: const Icon(Icons.arrow_forward),
+        //     label: const Text('Leçon suivante'),
+        //     style: ElevatedButton.styleFrom(
+        //       padding: const EdgeInsets.symmetric(vertical: 16),
+        //     ),
+        //   ),
+        // ),
 
         // Bouton terminer si dernière leçon
         // Bouton terminer si dernière leçon
@@ -383,8 +284,11 @@ if (!provider.canGoNext && state.selectedLesson != null)
       builder: (context, authProvider, _) {
         final userId = authProvider.userId ?? '';
 
-        return ElevatedButton.icon(
-          onPressed: () {
+                return UnoButton(
+                  label: "Passer aux exercices",
+                  isLoading: false,
+                  isEnabled: true,
+                  onPressed: () {
             if (userId.isEmpty) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
@@ -403,14 +307,38 @@ if (!provider.canGoNext && state.selectedLesson != null)
                 'userId': userId, // ← Depuis AuthProvider
               },
             );
-          },
-          icon: const Icon(Icons.check_circle),
-          label: const Text('Passer aux exercices'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.green,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-          ),
-        );
+                  },
+                );
+        
+        
+                //  ElevatedButton.icon(
+                //   onPressed: () {
+                //     if (userId.isEmpty) {
+                //       ScaffoldMessenger.of(context).showSnackBar(
+                //         const SnackBar(
+                //           content: Text('Erreur: utilisateur non connecté'),
+                //         ),
+                //       );
+                //       return;
+                //     }
+
+                //     Navigator.pushReplacementNamed(
+                //       context,
+                //       '/competence-ready',
+                //       arguments: {
+                //         'competenceId': widget.competenceId,
+                //         'competenceName': widget.competenceName,
+                //         'userId': userId, // ← Depuis AuthProvider
+                //       },
+                //     );
+                //   },
+                //   icon: const Icon(Icons.check_circle),
+                //   label: const Text('Passer aux exercices'),
+                //   style: ElevatedButton.styleFrom(
+                //     backgroundColor: Colors.green,
+                //     padding: const EdgeInsets.symmetric(vertical: 16),
+                //   ),
+                // );
       },
     ),
   ),

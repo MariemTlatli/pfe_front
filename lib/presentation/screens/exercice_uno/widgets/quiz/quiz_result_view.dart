@@ -1,4 +1,6 @@
 // lib/presentation/screens/exercice_uno/widgets/quiz/quiz_result_view.dart
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 class QuizResultView extends StatelessWidget {
@@ -23,17 +25,19 @@ class QuizResultView extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _buildScoreBadge(percentage),
             const SizedBox(height: 32),
             Text(
               percentage >= 70 ? 'Excellent !' : 'Continue tes efforts !',
               style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            Text(
-              'Tu as obtenu $score sur $total bonnes réponses.',
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white70, fontSize: 16),
+            Image.asset(
+              [
+                'assets/exercice_uno/card_img/j+2.png',
+                'assets/exercice_uno/card_img/b+2.png',
+                'assets/exercice_uno/card_img/v+2.png',
+                'assets/exercice_uno/card_img/r+2.png',
+              ][Random().nextInt(4)],
             ),
             const SizedBox(height: 48),
             _buildRestartButton(),

@@ -100,7 +100,7 @@ class AdaptiveExerciseState {
   bool get canGoNext => currentIndex < totalExercises;
 
   /// Peut revenir en arrière ?
-  bool get canGoPrevious => currentIndex > 1;
+  bool get canGoPrevious => false;
 
   /// Est le dernier exercice ?
   bool get isLastExercise => currentIndex == totalExercises;
@@ -124,14 +124,13 @@ class AdaptiveExerciseState {
 
 /// Provider pour les exercices adaptatifs
 class AdaptiveExerciseProvider extends ChangeNotifier {
-  final AdaptiveExerciseRemoteDataSource _dataSource;
+  final AdaptiveExerciseRemoteDataSource dataSource;
 
   AdaptiveExerciseState _state = AdaptiveExerciseState();
   AdaptiveExerciseState get state => _state;
 
   AdaptiveExerciseProvider({
-    required AdaptiveExerciseRemoteDataSource dataSource,
-  }) : _dataSource = dataSource;
+    required this.dataSource});
 
   void _updateState(AdaptiveExerciseState newState) {
     _state = newState;
@@ -148,6 +147,8 @@ class AdaptiveExerciseProvider extends ChangeNotifier {
     required String userId,
     int count = 3,
     bool regenerate = false,
+    double? difficulty,
+    List<String>? exerciseTypes,
   }) async {
     _updateState(
       _state.copyWith(
@@ -159,15 +160,17 @@ class AdaptiveExerciseProvider extends ChangeNotifier {
     );
 
     try {
-      final response = await _dataSource.generateExercises(
+      final response = await dataSource.generateExercises(
         competenceId: competenceId,
         userId: userId,
         count: count,
         regenerate: regenerate,
+        difficulty: difficulty,
+        exerciseTypes: exerciseTypes,
       );
-
+      print('response: $response');
       // Sélectionner le premier exercice
-      final firstExercise = response.firstExercise;
+      final firstExercise = response.exercises.first;
 
       _updateState(
         _state.copyWith(
@@ -210,7 +213,7 @@ class AdaptiveExerciseProvider extends ChangeNotifier {
       print('   - Emotion: ${submission.emotionData.dominantEmotion}');
 
       // Appeler le datasource
-      final result = await _dataSource.submitAnswer(submission);
+      final result = await dataSource.submitAnswer(submission);
 
       // Extraire les données de la réponse
       final isCorrect = result['is_correct'] as bool? ?? false;
@@ -249,14 +252,31 @@ class AdaptiveExerciseProvider extends ChangeNotifier {
 
   // ✅ Méthode pour passer à l'exercice suivant
   void nextExerciseContent() {
-    if (_state.currentIndex < _state.exercises.length - 1) {
-      _state = _state.copyWith(currentIndex: _state.currentIndex + 1);
-      notifyListeners(); // 🔥 Important : notifie l'UI pour rebuild
+    if (_state.currentIndex < _state.exercises.length) {
+      final nextIndex = _state.currentIndex + 1;
+      _updateState(
+        _state.copyWith(
+          currentIndex: nextIndex,
+          currentExercise: _state.exercises[nextIndex - 1],
+        ),
+      );
+    }
+  }
+
+  void previousExercise() {
+    if (_state.currentIndex > 1) {
+      final prevIndex = _state.currentIndex - 1;
+      _updateState(
+        _state.copyWith(
+          currentIndex: prevIndex,
+          currentExercise: _state.exercises[prevIndex - 1],
+        ),
+      );
     }
   }
 
   // ✅ Méthode utilitaire pour savoir si c'est le dernier exercice
-  bool get isLastExercise => _state.currentIndex >= _state.exercises.length - 1;
+  bool get isLastExercise => _state.currentIndex >= _state.exercises.length;
 
   // ══════════════════════════════════════════════════════════════
   // NAVIGATION
@@ -303,27 +323,27 @@ class AdaptiveExerciseProvider extends ChangeNotifier {
   }
 
   /// Revenir à l'exercice précédent
-  bool previousExercise() {
-    if (_state.canGoPrevious) {
-      final prevIndex = _state.currentIndex - 1;
-      final exercise = _state.exercisesResponse?.getExercise(prevIndex - 1);
+  // bool previousExercise() {
+  //   if (_state.canGoPrevious) {
+  //     final prevIndex = _state.currentIndex - 1;
+  //     final exercise = _state.exercisesResponse?.getExercise(prevIndex - 1);
 
-      if (exercise != null) {
-        _updateState(
-          _state.copyWith(
-            currentExercise: exercise,
-            currentIndex: prevIndex,
-            // Réinitialiser les résultats de soumission
-            lastDecision: null,
-            lastSubmissionCorrect: null,
-            lastFeedbackMessage: null,
-          ),
-        );
-        return true;
-      }
-    }
-    return false;
-  }
+  //     if (exercise != null) {
+  //       _updateState(
+  //         _state.copyWith(
+  //           currentExercise: exercise,
+  //           currentIndex: prevIndex,
+  //           // Réinitialiser les résultats de soumission
+  //           lastDecision: null,
+  //           lastSubmissionCorrect: null,
+  //           lastFeedbackMessage: null,
+  //         ),
+  //       );
+  //       return true;
+  //     }
+  //   }
+  //   return false;
+  // }
 
   // ══════════════════════════════════════════════════════════════
   // UTILITAIRES

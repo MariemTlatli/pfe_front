@@ -8,6 +8,7 @@ import 'package:front/presentation/provider/emotion_provider.dart';
 import 'package:front/presentation/screens/dashboard/pages/details_page.dart';
 // import 'package:front/presentation/screens/dashboard/pages/exercise_page.dart';
 import 'package:front/presentation/screens/dashboard/pages/lesson_page.dart';
+import 'package:front/presentation/screens/dashboard/pages/subject_detail_page.dart';
 import 'package:front/presentation/screens/exercice_uno/card_stack_screen_s.dart';
 import 'package:front/presentation/screens/exercice_uno/card_stack_screen_static.dart';
 
@@ -35,10 +36,11 @@ import 'presentation/provider/adaptive_exercise_provider.dart'; // ← NOUVEAU
 import 'presentation/screens/auth/login/login_screen.dart';
 import 'presentation/screens/auth/register/register_screen.dart';
 import 'presentation/screens/auth/splash/splash_screen.dart';
-import 'presentation/screens/home/home_screen.dart';
+import 'presentation/screens/home/home_screen_v2.dart';
 import 'presentation/screens/dashboard/pages/discovery_page.dart';
-import 'presentation/screens/dashboard/pages/subject_detail_page.dart';
 import 'presentation/screens/dashboard/pages/competence_ready_page.dart';
+import 'presentation/screens/matieres/subjects_screen.dart';
+import 'presentation/screens/matieres/curriculum_path_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -96,6 +98,7 @@ void main() async {
       localizationProvider: localizationProvider,
       emotionDataSource: emotionDataSource,
       cardremoteDatasource: cardremoteDatasource,
+      httpConsumer: httpConsumer,
     ),
   );
 }
@@ -111,6 +114,7 @@ class MyApp extends StatelessWidget {
   final LocalizationProvider localizationProvider;
   final EmotionRemoteDataSource emotionDataSource;
   final dynamic cardremoteDatasource;
+  final HttpConsumer httpConsumer;
 
   const MyApp({
     Key? key,
@@ -119,16 +123,18 @@ class MyApp extends StatelessWidget {
     required this.curriculumDataSource,
     required this.lessonDataSource,
     required this.zpdDataSource,
-    required this.adaptiveExerciseDataSource, // ← NOUVEAU
+    required this.adaptiveExerciseDataSource,
     required this.localizationProvider,
     required this.emotionDataSource,
     required this.cardremoteDatasource,
+    required this.httpConsumer,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        Provider<HttpConsumer>.value(value: httpConsumer),
         ChangeNotifierProvider(
           create: (_) => CardProvider(dataSource: cardremoteDatasource),
         ),
@@ -157,6 +163,7 @@ class MyApp extends StatelessWidget {
       child: Consumer<LocalizationProvider>(
         builder: (context, localizationProvider, _) {
           return MaterialApp(
+            debugShowCheckedModeBanner: false,
             title: localizationProvider.locale.appName,
             locale: localizationProvider.currentLocale,
             supportedLocales: localizationProvider.supportedLanguages
@@ -177,7 +184,7 @@ class MyApp extends StatelessWidget {
               '/cap': (context) => const CardStackScreenStatic(),
               // '/stack': (context) => const CardStackViewPage(),
               '/register': (context) => const RegisterScreen(),
-              '/home': (context) => const HomeScreen(),
+              '/home': (context) => const HomeScreenV2(),
 
               '/discovery': (context) {
                 final userId =
@@ -293,6 +300,7 @@ class MyApp extends StatelessWidget {
                 );
               },
 
+
               '/subject-detail': (context) {
                 final args =
                     ModalRoute.of(context)?.settings.arguments
@@ -310,10 +318,45 @@ class MyApp extends StatelessWidget {
                   ),
                 );
               },
+
+
+              '/subjects': (context) {
+                final args =
+                    ModalRoute.of(context)?.settings.arguments
+                        as Map<String, dynamic>? ??
+                    {};
+                final userId = args['userId'] as String? ?? '';
+                final domainId = args['domainId'] as String? ?? '';
+                return ChangeNotifierProvider(
+                  create: (_) => DiscoveryProvider(
+                    repository: discoveryRepository,
+                    userId: userId,
+                  ),
+                  child: SubjectsScreen(domainId: domainId, userId: userId),
+                );
+              },
+
+              '/curriculum-path': (context) {
+                final args =
+                    ModalRoute.of(context)?.settings.arguments
+                        as Map<String, dynamic>? ??
+                    {};
+
+                return ChangeNotifierProvider(
+                  create: (_) =>
+                      CurriculumProvider(dataSource: curriculumDataSource),
+                  child: CurriculumPathScreen(
+                    subjectId: args['subjectId'] as String? ?? '',
+                    subjectName: args['subjectName'] as String? ?? 'Parcours',
+                    userId: args['userId'] as String? ?? '',
+                    hasCurriculum: args['hasCurriculum'] as bool? ?? false,
+                  ),
+                );
+              },
             },
             onGenerateRoute: (settings) {
               return MaterialPageRoute(
-                builder: (context) => const HomeScreen(),
+                builder: (context) => const HomeScreenV2(),
               );
             },
           );

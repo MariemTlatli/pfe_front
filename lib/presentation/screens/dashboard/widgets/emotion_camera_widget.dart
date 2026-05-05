@@ -46,7 +46,7 @@ class _DraggableEmotionCameraState extends State<DraggableEmotionCamera> {
             _dy = _dy.clamp(0.0, screenH - _widgetHeight);
           });
         },
-        child: const EmotionCameraWidget(captureIntervalSeconds: 10),
+        child: const EmotionCameraWidget(captureIntervalSeconds: 5),
       ),
     );
   }
@@ -181,8 +181,10 @@ class _EmotionCameraWidgetState extends State<EmotionCameraWidget> {
   }
 
   Future<void> _captureAndPredict() async {
+    final emotionProvider = context.read<EmotionProvider>();
     if (_controller == null || !_controller!.value.isInitialized) return;
-    if (context.read<EmotionProvider>().isLoading) return;
+    if (!emotionProvider.isAnalysisEnabled) return;
+    if (emotionProvider.isLoading) return;
 
     try {
       final XFile image = await _controller!.takePicture();
@@ -193,7 +195,7 @@ class _EmotionCameraWidgetState extends State<EmotionCameraWidget> {
             .read<EmotionProvider>()
             .predictEmotion(imageBytes: imageBytes);
         var result = context.read<EmotionProvider>().currentEmotion;
-        context.read<EmotionProvider>().addCaptureFromResult(result!); // ← Ajoute au buffer
+        context.read<EmotionProvider>().addCaptureFromResult(result!);
       }
     } catch (e) {
       print('❌ Erreur capture: $e');

@@ -1,4 +1,4 @@
-// lib/providers/emotion_provider.dart
+// lib/presentation/provider/emotion_provider.dart
 
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
@@ -19,10 +19,18 @@ class EmotionProvider extends ChangeNotifier {
   bool _isApiHealthy = false;
   String? _errorMessage;
   DateTime? _lastPredictionTime;
+  bool _isAnalysisEnabled =
+      true; // Flag global pour activer/désactiver la capture
+  bool _hasTriggeredHappyRequest = false;
+  bool _hasTriggeredSadRequest = false;
+
+  // ── COMPTEURS DE SESSION ──────────────────────
+  int _happyCount = 0;
+  int _sadCount = 0;
 
   // ── BUFFER DE CAPTURES ─────────────────────────
   final List<EmotionCaptureData> _captures = []; // ← EmotionCaptureData
-  static const int _maxCaptures = 10;
+  static const int _maxCaptures = 100;
 
   // ── Getters ───────────────────────────────────
   EmotionResult? get currentEmotion => _currentEmotion;
@@ -31,6 +39,11 @@ class EmotionProvider extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   bool get hasError => _errorMessage != null;
   DateTime? get lastPredictionTime => _lastPredictionTime;
+  bool get isAnalysisEnabled => _isAnalysisEnabled;
+  int get happyCount => _happyCount;
+  int get sadCount => _sadCount;
+  bool get hasTriggeredHappyRequest => _hasTriggeredHappyRequest;
+  bool get hasTriggeredSadRequest => _hasTriggeredSadRequest;
 
   /// Liste des captures (lecture seule)
   List<EmotionCaptureData> get captures =>
@@ -90,6 +103,13 @@ class EmotionProvider extends ChangeNotifier {
     // Limite FIFO
     if (_captures.length > _maxCaptures) {
       _captures.removeAt(0);
+    }
+
+    // Mise à jour des compteurs de session
+    if (capture.emotion.toLowerCase() == 'happy') {
+      _happyCount++;
+    } else if (capture.emotion.toLowerCase() == 'sad') {
+      _sadCount++;
     }
 
     notifyListeners();
@@ -178,7 +198,47 @@ class EmotionProvider extends ChangeNotifier {
   void clearEmotion() {
     _currentEmotion = null;
     _lastPredictionTime = null;
+    _happyCount = 0;
+    _sadCount = 0;
+    _isAnalysisEnabled = true;
+    _hasTriggeredHappyRequest = false;
+    _hasTriggeredSadRequest = false;
     clearCaptures();
+  }
+
+  /// Marque la requête happy comme envoyée
+  void markHappyTriggered() {
+    _hasTriggeredHappyRequest = true;
+    notifyListeners();
+  }
+
+  /// Marque la requête sad comme envoyée
+  void markSadTriggered() {
+    _hasTriggeredSadRequest = true;
+    notifyListeners();
+  }
+
+  /// ✨ Réinitialise uniquement les compteurs de session
+  void resetCounters() {
+    _happyCount = 0;
+    _sadCount = 0;
+    notifyListeners();
+  }
+
+  /// ✨ Active ou désactive l'analyse (utilisé lors du timeout)
+  void setAnalysisEnabled(bool enabled) {
+    _isAnalysisEnabled = enabled;
+    notifyListeners();
+  }
+
+  /// Attribue une carte Inversion
+  Future<Map<String, dynamic>> attribuerInversion(String userId) async {
+    return await _dataSource.attribuerInversion(userId);
+  }
+
+  /// Attribue une carte Joker
+  Future<Map<String, dynamic>> attribuerJoker(String userId) async {
+    return await _dataSource.attribuerJoker(userId);
   }
 
   @override

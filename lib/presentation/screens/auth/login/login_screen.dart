@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../../config/theme/colors.dart';
-import '../../../../config/theme/text_styles.dart';
 import '../../../../presentation/provider/auth_provider.dart';
 import '../../../../presentation/provider/localization_provider.dart';
-import '../../../../presentation/widgets/custom_button.dart';
-import '../../../../presentation/widgets/custom_text_field.dart';
+import 'widgets/login_header.dart';
+import 'widgets/login_form.dart';
+import 'widgets/login_footer.dart';
 import '../../../../presentation/widgets/error_widget.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -19,153 +18,70 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  bool _showPassword = false;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Consumer2<AuthProvider, LocalizationProvider>(
-              builder: (context, authProvider, localizationProvider, _) {
-                final locale = localizationProvider.locale;
-
-                return Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+    return Container(
+      decoration: const BoxDecoration(
+        image: DecorationImage(
+          // Assurez-vous que le chemin correspond à l'endroit où vous avez sauvegardé l'image
+          image: AssetImage('assets/images/auth_bg.png'),
+          fit: BoxFit.cover,
+        ),
+      ),
+      child: Scaffold(
+        backgroundColor:
+            Colors.transparent, // Important pour voir l'image en dessous
+        body: SafeArea(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Consumer2<AuthProvider, LocalizationProvider>(
+                builder: (context, auth, loc, _) {
+                  return Column(
                     children: [
+                      LoginHeader(localizationProvider: loc),
                       const SizedBox(height: 40),
-                      Text(locale.welcome, style: AppTextStyles.displaySmall),
-                      const SizedBox(height: 8),
-                      Text(
-                        locale.signIn,
-                        style: AppTextStyles.bodyLarge.copyWith(
-                          color: AppColors.grey600,
-                        ),
+                      LoginForm(
+                        emailController: _emailController,
+                        passwordController: _passwordController,
+                        formKey: _formKey,
+                        localizationProvider: loc,
                       ),
-                      const SizedBox(height: 48),
-
-                      // Email Field
-                      CustomTextField(
-                        label: locale.email,
-                        hint: 'example@email.com',
-                        controller: _emailController,
-                        prefixIcon: const Icon(Icons.email_outlined),
-                        keyboardType: TextInputType.emailAddress,
-                        validator: (value) {
-                          if (value?.isEmpty ?? true) {
-                            return locale.emailRequired;
-                          }
-                          if (!RegExp(
-                            r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
-                          ).hasMatch(value!)) {
-                            return locale.emailInvalid;
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Password Field
-                      CustomTextField(
-                        label: locale.password,
-                        controller: _passwordController,
-                        obscureText: !_showPassword,
-                        prefixIcon: const Icon(Icons.lock_outlined),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _showPassword
-                                ? Icons.visibility
-                                : Icons.visibility_off,
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              _showPassword = !_showPassword;
-                            });
-                          },
-                        ),
-                        validator: (value) {
-                          if (value?.isEmpty ?? true) {
-                            return locale.passwordRequired;
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Forgot Password
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(
-                          onPressed: () {
-                            // TODO: Implement forgot password
-                          },
-                          child: Text(locale.forgotPassword),
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-
-                      // Error Message
-                      if (authProvider.errorMessage != null) ...[
-                        CustomErrorWidget(message: authProvider.errorMessage!),
-                        const SizedBox(height: 24),
+                      if (auth.errorMessage != null) ...[
+                        const SizedBox(height: 20),
+                        CustomErrorWidget(message: auth.errorMessage!),
                       ],
-
-                      // Sign In Button
-                      CustomButton(
-                        label: locale.signIn,
-                        isLoading: authProvider.isLoading,
-                        onPressed: () {
-                          authProvider.clearError();
-                          if (_formKey.currentState!.validate()) {
-                            authProvider
-                                .login(
-                                  email: _emailController.text.trim(),
-                                  password: _passwordController.text,
-                                )
-                                .then((success) {
-                                  if (success && mounted) {
-                                    Navigator.pushReplacementNamed(
-                                      context,
-                                      '/home',
-                                    );
-                                  }
-                                });
-                          }
-                        },
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Sign Up Link
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(locale.dontHaveAccount),
-                          GestureDetector(
-                            onTap: () {
-                              Navigator.pushNamed(context, '/register');
-                            },
-                            child: Text(
-                              locale.register,
-                              style: AppTextStyles.labelLarge.copyWith(
-                                color: AppColors.primary,
-                              ),
-                            ),
-                          ),
-                        ],
+                      LoginFooter(
+                        authProvider: auth,
+                        localizationProvider: loc,
+                        onLogin: () => _handleLogin(auth),
                       ),
                     ],
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
           ),
         ),
       ),
     );
+  }
+
+  void _handleLogin(AuthProvider auth) {
+    auth.clearError();
+    if (_formKey.currentState!.validate()) {
+      auth
+          .login(
+            email: _emailController.text.trim(),
+            password: _passwordController.text,
+          )
+          .then((success) {
+            if (success && mounted) {
+              Navigator.pushReplacementNamed(context, '/home');
+            }
+          });
+    }
   }
 
   @override

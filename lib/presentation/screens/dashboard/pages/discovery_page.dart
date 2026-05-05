@@ -254,7 +254,7 @@ class _DiscoveryPageState extends State<DiscoveryPage> {
           const SizedBox(height: 32),
           // Section des matières
           if (_selectedDomainId != null) ...[
-            _buildSectionTitle('Matières disponibles', Icons.book),
+            _buildSectionTitle('Matières dispofnibles', Icons.book),
             const SizedBox(height: 12),
             if (provider.isLoading)
               const Center(

@@ -45,62 +45,74 @@ class _CompetenceReadyPageState extends State<CompetenceReadyPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text(widget.competenceName),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: Text(widget.competenceName, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh, color: Colors.amber),
             tooltip: 'Actualiser l\'analyse',
             onPressed: _loadAnalysis,
           ),
         ],
       ),
-      body: RefreshIndicator(
-        onRefresh: _loadAnalysis,
-        child: Consumer<ZPDProvider>(
-          builder: (context, provider, _) {
-            final state = provider.state;
-
-            // Chargement initial seulement (si pas de données)
-            if (state.isLoading && !state.hasAnalysis) {
-              return const Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 16),
-                    Text('Analyse de votre niveau...'),
-                  ],
-                ),
-              );
-            }
-
-            // Erreur
-            if (state.error != null && !state.hasAnalysis) {
-              return _buildErrorState(state.error!, provider);
-            }
-
-            // Analyse chargée (ou en cours mais avec anciennes données)
-            if (state.hasAnalysis) {
-              return Stack(
-                children: [
-                  _buildAnalysisContent(state.analysis!),
-                  if (state.isLoading)
-                    const Positioned(
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      child: LinearProgressIndicator(minHeight: 2),
+      body: Container(
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/images/auth_bg.png'),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: SafeArea(
+          child: RefreshIndicator(
+            onRefresh: _loadAnalysis,
+            color: Colors.amber,
+            child: Consumer<ZPDProvider>(
+              builder: (context, provider, _) {
+                final state = provider.state;
+    
+                if (state.isLoading && !state.hasAnalysis) {
+                  return const Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        CircularProgressIndicator(color: Colors.amber),
+                        SizedBox(height: 16),
+                        Text('Analyse de votre niveau par l\'IA...', style: TextStyle(color: Colors.white)),
+                      ],
                     ),
-                ],
-              );
-            }
-
-            // État vide
-            return const Center(
-              child: Text('Aucun exercice n\'a été fait pour cette compétence'),
-            );
-          },
+                  );
+                }
+    
+                if (state.error != null && !state.hasAnalysis) {
+                  return _buildErrorState(state.error!, provider);
+                }
+    
+                if (state.hasAnalysis) {
+                  return Stack(
+                    children: [
+                      _buildAnalysisContent(state.analysis!),
+                      if (state.isLoading)
+                        const Positioned(
+                          top: 0, left: 0, right: 0,
+                          child: LinearProgressIndicator(minHeight: 2, backgroundColor: Colors.transparent, valueColor: AlwaysStoppedAnimation<Color>(Colors.amber)),
+                        ),
+                    ],
+                  );
+                }
+    
+                return const Center(
+                  child: Text('Aucune donnée disponible', style: TextStyle(color: Colors.white70)),
+                );
+              },
+            ),
+          ),
         ),
       ),
     );
@@ -172,45 +184,49 @@ class _CompetenceReadyPageState extends State<CompetenceReadyPage> {
 
   /// Header avec zone ZPD
   Widget _buildZoneHeader(CompetenceZPDAnalysisModel analysis) {
-    final zoneColors = {
-      'mastered': Colors.green,
-      'zpd': Colors.blue,
-      'frustration': Colors.orange,
-    };
-    final zoneIcons = {
-      'mastered': Icons.check_circle,
-      'zpd': Icons.school,
-      'frustration': Icons.warning,
-    };
-
-    final color = zoneColors[analysis.effectiveZone] ?? Colors.grey;
-    final icon = zoneIcons[analysis.effectiveZone] ?? Icons.help;
+    Color color;
+    IconData icon;
+    
+    switch (analysis.effectiveZone.toLowerCase()) {
+      case 'mastered':
+        color = Colors.greenAccent;
+        icon = Icons.check_circle;
+        break;
+      case 'frustration':
+        color = Colors.orangeAccent;
+        icon = Icons.warning;
+        break;
+      default:
+        color = Colors.blueAccent;
+        icon = Icons.psychology;
+    }
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.3)),
+        color: Colors.white.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: color.withOpacity(0.3), width: 2),
       ),
       child: Column(
         children: [
-          Icon(icon, size: 64, color: color),
-          const SizedBox(height: 12),
+          Icon(icon, size: 70, color: color),
+          const SizedBox(height: 16),
           Text(
-            analysis.zoneLabel,
+            analysis.zoneLabel.toUpperCase(),
             style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+              fontSize: 20,
+              fontWeight: FontWeight.w900,
               color: color,
+              letterSpacing: 2,
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           Text(
             analysis.description,
-            style: const TextStyle(fontSize: 14, color: Colors.grey),
+            style: const TextStyle(fontSize: 14, color: Colors.white70, height: 1.5),
             textAlign: TextAlign.center,
           ),
         ],
@@ -220,68 +236,68 @@ class _CompetenceReadyPageState extends State<CompetenceReadyPage> {
 
   /// Card niveau de maîtrise
   Widget _buildMasteryCard(CompetenceZPDAnalysisModel analysis) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Votre niveau',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${(analysis.masteryLevel * 100).toStringAsFixed(0)}%',
-                        style: const TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                        ),
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.black26,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.leaderboard, color: Colors.amber, size: 20),
+              SizedBox(width: 8),
+              Text(
+                'Niveau de Maîtrise',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${(analysis.masteryLevel * 100).toStringAsFixed(0)}%',
+                      style: const TextStyle(
+                        fontSize: 40,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
                       ),
-                      const Text(
-                        'Maîtrise actuelle',
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                    ],
-                  ),
+                    ),
+                    const Text(
+                      'Progression actuelle',
+                      style: TextStyle(color: Colors.white54, fontSize: 13),
+                    ),
+                  ],
                 ),
-                _buildProgressRing(analysis.masteryLevel, analysis.thresholds),
-              ],
-            ),
-            const SizedBox(height: 16),
-            LinearProgressIndicator(
+              ),
+              _buildProgressRing(analysis.masteryLevel, analysis.thresholds),
+            ],
+          ),
+          const SizedBox(height: 20),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: LinearProgressIndicator(
               value: analysis.masteryLevel,
-              backgroundColor: Colors.grey.shade200,
+              backgroundColor: Colors.white10,
               valueColor: AlwaysStoppedAnimation<Color>(
                 analysis.masteryLevel >= analysis.thresholds.mastered
-                    ? Colors.green
+                    ? Colors.greenAccent
                     : analysis.masteryLevel >= analysis.thresholds.learning
-                        ? Colors.blue
-                        : Colors.orange,
+                        ? Colors.blueAccent
+                        : Colors.orangeAccent,
               ),
+              minHeight: 10,
             ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Seuil apprentissage: ${(analysis.thresholds.learning * 100).toStringAsFixed(0)}%',
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-                Text(
-                  'Maîtrise: ${(analysis.thresholds.mastered * 100).toStringAsFixed(0)}%',
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-              ],
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -320,67 +336,63 @@ class _CompetenceReadyPageState extends State<CompetenceReadyPage> {
 
   /// Card métriques SAINT+
   Widget _buildSaintMetricsCard(SAINTMetricsModel metrics) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Row(
-              children: [
-                Icon(Icons.psychology, size: 20),
-                SizedBox(width: 8),
-                Text(
-                  'Analyse IA (SAINT+)',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            _buildMetricRow(
-              icon: Icons.speed,
-              label: 'Probabilité de réussite',
-              value: '${(metrics.pCorrect * 100).toStringAsFixed(0)}%',
-              color: metrics.pCorrect >= 0.7
-                  ? Colors.green
-                  : metrics.pCorrect >= 0.4
-                      ? Colors.orange
-                      : Colors.red,
-            ),
-            const Divider(),
-            _buildMetricRow(
-              icon: Icons.replay,
-              label: 'Tentatives estimées',
-              value: '${metrics.estimatedAttempts.value}',
-              subtitle: metrics.estimatedAttempts.label,
-            ),
-            const Divider(),
-            _buildMetricRow(
-              icon: Icons.lightbulb,
-              label: 'Besoin d\'indice',
-              value: metrics.hintProbability.level.toUpperCase(),
-              color: metrics.hintProbability.level == 'fort'
-                  ? Colors.orange
-                  : metrics.hintProbability.level == 'moyen'
-                      ? Colors.blue
-                      : Colors.green,
-            ),
-            const Divider(),
-            _buildMetricRow(
-              icon: Icons.favorite,
-              label: 'Engagement',
-              value: metrics.engagement.level.toUpperCase(),
-              subtitle: metrics.engagement.description,
-            ),
-            const Divider(),
-            _buildMetricRow(
-              icon: Icons.verified_user,
-              label: 'Confiance analyse',
-              value: metrics.confidence.level.toUpperCase(),
-              subtitle: '${metrics.confidence.nInteractions} interactions',
-            ),
-          ],
-        ),
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.black26,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.psychology, size: 20, color: Colors.amber),
+              SizedBox(width: 8),
+              Text(
+                'Analyse IA (SAINT+)',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _buildMetricRow(
+            icon: Icons.auto_awesome,
+            label: 'Réussite prédite',
+            value: '${(metrics.pCorrect * 100).toStringAsFixed(0)}%',
+            color: metrics.pCorrect >= 0.7
+                ? Colors.greenAccent
+                : metrics.pCorrect >= 0.4
+                    ? Colors.orangeAccent
+                    : Colors.redAccent,
+          ),
+          const Divider(color: Colors.white10),
+          _buildMetricRow(
+            icon: Icons.history,
+            label: 'Effort estimé',
+            value: '${metrics.estimatedAttempts.value} ex.',
+            subtitle: metrics.estimatedAttempts.label,
+          ),
+          const Divider(color: Colors.white10),
+          _buildMetricRow(
+            icon: Icons.help_outline,
+            label: 'Aide nécessaire',
+            value: metrics.hintProbability.level.toUpperCase(),
+            color: metrics.hintProbability.level == 'fort'
+                ? Colors.orangeAccent
+                : metrics.hintProbability.level == 'moyen'
+                    ? Colors.blueAccent
+                    : Colors.greenAccent,
+          ),
+          const Divider(color: Colors.white10),
+          _buildMetricRow(
+            icon: Icons.bolt,
+            label: 'Engagement',
+            value: metrics.engagement.level.toUpperCase(),
+            subtitle: metrics.engagement.description,
+          ),
+        ],
       ),
     );
   }
@@ -394,35 +406,37 @@ class _CompetenceReadyPageState extends State<CompetenceReadyPage> {
     Color? color,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
         children: [
-          Icon(icon, size: 24, color: Colors.grey),
+          Icon(icon, size: 24, color: Colors.white54),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: const TextStyle(fontSize: 14)),
+                Text(label, style: const TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.w500)),
                 if (subtitle != null)
                   Text(
                     subtitle,
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    style: const TextStyle(fontSize: 12, color: Colors.white38),
                   ),
               ],
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: (color ?? Colors.blue).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
+              color: (color ?? Colors.blueAccent).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: (color ?? Colors.blueAccent).withOpacity(0.2)),
             ),
             child: Text(
               value,
               style: TextStyle(
                 fontWeight: FontWeight.bold,
-                color: color ?? Colors.blue,
+                color: color ?? Colors.blueAccent,
+                fontSize: 13,
               ),
             ),
           ),
@@ -519,8 +533,18 @@ class _CompetenceReadyPageState extends State<CompetenceReadyPage> {
     final color = buttonColors[analysis.effectiveZone] ?? Colors.blue;
     final text = buttonTexts[analysis.effectiveZone] ?? 'Continuer';
 
-    return SizedBox(
+    return Container(
       width: double.infinity,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.amber.withOpacity(0.3),
+            blurRadius: 20,
+            spreadRadius: -5,
+          ),
+        ],
+      ),
       child: ElevatedButton.icon(
         onPressed: () {
           final authProvider = context.read<AuthProvider>();
@@ -536,18 +560,19 @@ class _CompetenceReadyPageState extends State<CompetenceReadyPage> {
               'count': analysis.difficultyParams.minExercises,
             },
           ).then((_) {
-            // Recharger l'analyse quand on revient des exercices
             _loadAnalysis();
           });
         },
-        icon: const Icon(Icons.play_arrow),
-        label: Text(text),
+        icon: const Icon(Icons.play_circle_fill, size: 28),
+        label: Text(text.toUpperCase(), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 1.5)),
         style: ElevatedButton.styleFrom(
-          backgroundColor: color,
-          padding: const EdgeInsets.symmetric(vertical: 16),
+          backgroundColor: Colors.amber,
+          foregroundColor: Colors.black,
+          padding: const EdgeInsets.symmetric(vertical: 18),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(16),
           ),
+          elevation: 0,
         ),
       ),
     );

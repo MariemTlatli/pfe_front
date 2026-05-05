@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:front/presentation/provider/emotion_provider.dart';
 import 'package:provider/provider.dart';
 import 'adaptive_exercise_controller.dart';
 import 'widgets/exercise_view.dart';
@@ -6,10 +7,11 @@ import 'widgets/action_buttons.dart';
 import 'widgets/adaptive_header.dart';
 import 'widgets/decision_utils.dart';
 import 'package:front/presentation/provider/card_provider.dart';
-import 'package:front/presentation/screens/exercice_uno/widgets/card_stack_view_page.dart';
 import 'package:front/presentation/screens/dashboard/widgets/emotion_camera_widget.dart';
 import 'package:front/presentation/screens/exercice_uno/services/quiz_controller.dart';
-import 'package:front/presentation/screens/exercice_uno/models/card_collection.dart';
+import 'package:front/presentation/screens/exercice_uno/widgets/reverse_card_dialog.dart';
+import 'package:front/presentation/screens/exercice_uno/widgets/joker_card_dialog.dart';
+
 
 class AdaptiveExercisePage extends StatefulWidget {
   final String competenceId, competenceName, userId;
@@ -27,6 +29,8 @@ class AdaptiveExercisePage extends StatefulWidget {
 class _AdaptiveExercisePageState extends State<AdaptiveExercisePage> {
   late AdaptiveExerciseController _controller;
   late QuizController _quizController;
+  bool _hasShownHappyDialog =
+      false; // Flag pour ne pas afficher le dialogue plusieurs fois
 
   @override
   void initState() {
@@ -38,84 +42,69 @@ class _AdaptiveExercisePageState extends State<AdaptiveExercisePage> {
     _quizController = QuizController(userId: widget.userId, questions: []);
     _quizController.init();
     
-    // 🃏 Chargement initial des cartes pour l'éventail
+    // 🃏 Chargement initial des cartes pour l'éventail + Reset des émotions
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<CardProvider>().loadAndMapCards(
             userId: widget.userId,
             difficulty: 0.5, // Difficulté moyenne par défaut
             nbCartes: 7,
           );
+      context.read<EmotionProvider>().resetCounters();
     });
 
     _controller.addListener(() {
-
       final event = _controller.currentEvent;
       if (event != null) {
         AdaptiveDecisionUtils.showDecisionDialog(
           context: context, event: event, controller: _controller
         );
         _controller.clearEvent();
+        // Reset du flag pour le prochain exercice
+        _hasShownHappyDialog = false;
       }
     });
+
+    // 🔬 Listener pour les émotions en temps réel
+    context.read<EmotionProvider>().addListener(_onEmotionChanged);
   }
+
+  void _onEmotionChanged() {
+    final emotionProvider = context.read<EmotionProvider>();
+
+    // 🎉 Cas HAPPY (5 ou plus) -> Carte Inversion
+    if (emotionProvider.happyCount >= 5 &&
+        !emotionProvider.hasTriggeredHappyRequest) {
+      emotionProvider
+          .markHappyTriggered(); // 🔒 Sécurité : ne s'exécute qu'une seule fois !
+      emotionProvider.attribuerInversion(widget.userId).then((res) {
+        if (res['success'] == true) {
+          ReverseCardDialog.show(context);
+        }
+      });
+    }
+
+    // 😢 Cas SAD (5 ou plus) -> Carte Joker
+    if (emotionProvider.sadCount >= 5 &&
+        !emotionProvider.hasTriggeredSadRequest) {
+      emotionProvider
+          .markSadTriggered(); // 🔒 Sécurité : ne s'exécute qu'une seule fois !
+      emotionProvider.attribuerJoker(widget.userId).then((res) {
+        if (res['success'] == true) {
+          JokerCardDialog.show(context);
+        }
+      });
+    }
+  }
+
 
   @override
   void dispose() {
     _controller.dispose();
     _quizController.dispose();
+    context.read<EmotionProvider>().removeListener(_onEmotionChanged);
     super.dispose();
   }
 
-  void _showHandDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A2E),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(25),
-          side: const BorderSide(color: Colors.amber, width: 2),
-        ),
-        title: const Row(
-          children: [
-            Icon(Icons.style, color: Colors.amber),
-            SizedBox(width: 10),
-            Text("Votre Main UNO", style: TextStyle(color: Colors.white)),
-          ],
-        ),
-        content: SizedBox(
-          width: double.maxFinite,
-          height: 300,
-          child: Consumer<CardProvider>(
-            builder: (context, provider, _) {
-              if (provider.isLoading) {
-                return const Center(child: CircularProgressIndicator(color: Colors.amber));
-              }
-              final paths = provider.cards
-                  .expand((c) => c.card.assetPaths)
-                  .toList();
-              if (paths.isEmpty) {
-                return const Center(
-                  child: Text("Aucune carte en main", style: TextStyle(color: Colors.white54)),
-                );
-              }
-              return Center(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: buildArcHand(context, paths),
-                ),
-              );
-            },
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text("Fermer", style: TextStyle(color: Colors.amber)),
-          ),
-        ],
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -125,18 +114,11 @@ class _AdaptiveExercisePageState extends State<AdaptiveExercisePage> {
         ChangeNotifierProvider.value(value: _quizController),
       ],
       child: Scaffold(
-        floatingActionButton: Builder(
-          builder: (context) => FloatingActionButton(
-            onPressed: () => _showHandDialog(context),
-            backgroundColor: Colors.amber,
-            child: const Icon(Icons.style, color: Colors.black),
-          ),
-        ),
         body: Container(
           decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft, end: Alignment.bottomRight,
-              colors: [Color(0xFF0F0C29), Color(0xFF302B63), Color(0xFF24243E)],
+            image: DecorationImage(
+              image: AssetImage('assets/images/auth_bg.png'),
+              fit: BoxFit.cover,
             ),
           ),
           child: SafeArea(
@@ -162,11 +144,11 @@ class _AdaptiveExercisePageState extends State<AdaptiveExercisePage> {
 
                 return Column(
                   children: [
-                    AdaptiveExerciseHeader(
-                      progress: (controller.currentIndex + 1) / controller.totalExercises,
-                      currentIndex: controller.currentIndex + 1,
-                      totalExercises: controller.totalExercises,
-                    ),
+                    // AdaptiveExerciseHeader(
+                    //   progress: (controller.currentIndex + 1) / controller.totalExercises,
+                    //   currentIndex: controller.currentIndex + 1,
+                    //   totalExercises: controller.totalExercises,
+                    // ),
                     Expanded(
                       child: Stack(
                         children: [
@@ -191,6 +173,7 @@ class _AdaptiveExercisePageState extends State<AdaptiveExercisePage> {
             ),
           ),
         ),
+        
       ),
     );
   }

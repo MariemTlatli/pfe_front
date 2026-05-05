@@ -77,4 +77,28 @@ class EmotionRemoteDataSource {
       rethrow;
     }
   }
+
+  /// POST - Attribue carte Inversion (Happy >= 5)
+  Future<Map<String, dynamic>> attribuerInversion(String userId) async {
+    try {
+      final res = await apiConsumer.post(
+        'gamification/inversion/$userId/attribuer-par-emotion',
+      );
+      return res as Map<String, dynamic>;
+    } catch (e) {
+      return {"success": false, "message": e.toString()};
+    }
+  }
+
+  /// POST - Attribue carte Joker (Sad >= 5)
+  Future<Map<String, dynamic>> attribuerJoker(String userId) async {
+    try {
+      final res = await apiConsumer.post(
+        'gamification/joker/$userId/attribuer-par-emotion',
+      );
+      return res as Map<String, dynamic>;
+    } catch (e) {
+      return {"success": false, "message": e.toString()};
+    }
+  }
 }

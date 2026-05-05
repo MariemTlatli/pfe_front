@@ -1,6 +1,7 @@
 import '../../core/api/api_consumer.dart';
 import '../../core/api/endpoints.dart';
 import '../models/auth_response_model.dart';
+import '../models/user_model.dart';
 
 abstract class AuthRemoteDataSource {
   Future<AuthResponseModel> register({
@@ -15,6 +16,7 @@ abstract class AuthRemoteDataSource {
   });
 
   Future<void> logout();
+  Future<UserModel> getUserProfile(String userId);
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -59,5 +61,11 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<void> logout() async {
     await apiConsumer.post(Endpoints.logout);
+  }
+
+  @override
+  Future<UserModel> getUserProfile(String userId) async {
+    final response = await apiConsumer.get('auth/profile/$userId');
+    return UserModel.fromJson(response);
   }
 }

@@ -35,9 +35,9 @@ class ExerciseView extends StatelessWidget {
         children: [
           ExerciseHeader(
             typeFormatted: exercise.typeFormatted,
-            estimatedTimeFormatted: exercise.estimatedTimeFormatted,
+            estimatedTimeFormatted: exercise.estimatedTime.toString(),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 15),
           QuestionCard(question: exercise.question),
           const SizedBox(height: 24),
           AnswerOptions(

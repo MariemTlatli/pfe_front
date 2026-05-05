@@ -37,7 +37,6 @@ class AdaptiveExerciseHeader extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              // const ExerciseTimerWidget(),
             ],
           ),
           const SizedBox(height: 8),

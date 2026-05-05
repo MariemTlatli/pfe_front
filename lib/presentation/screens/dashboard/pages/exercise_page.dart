@@ -782,7 +782,7 @@ class _AdaptiveExercisePageState extends State<AdaptiveExercisePage> {
               const Icon(Icons.timer, size: 14, color: Colors.grey),
               const SizedBox(width: 4),
               Text(
-                exercise.estimatedTimeFormatted,
+                exercise.estimatedTime.toString(),
                 style: const TextStyle(fontSize: 12, color: Colors.grey),
               ),
             ],
@@ -825,7 +825,7 @@ class _AdaptiveExercisePageState extends State<AdaptiveExercisePage> {
       return _buildSingleChoiceOptions(exercise);
     } else if (exercise.type == 'texte_a_trous') {
       return _buildTextInput(exercise);
-    } else if (exercise.isCodeExercise) {
+    } else if (exercise.type == 'code') {
       return _buildCodeEditor(exercise);
     }
 

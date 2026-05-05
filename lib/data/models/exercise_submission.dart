@@ -7,8 +7,7 @@ class ExerciseSubmissionModel {
   final String userId;
 
   // ── Réponse de l'apprenant ────────────────────
-  final String answer;
-  final List<String>? multipleAnswers; // Pour QCM multiple
+  final dynamic answer; // String ou List<String>
   final bool isCorrect; // Sera calculé par le backend ou frontend
 
   // ── Données de performance ────────────────────
@@ -28,7 +27,6 @@ class ExerciseSubmissionModel {
     required this.competenceId,
     required this.userId,
     required this.answer,
-    this.multipleAnswers,
     required this.isCorrect,
     required this.timeSpentSeconds,
     required this.hintsUsed,
@@ -45,8 +43,6 @@ class ExerciseSubmissionModel {
       'exercise_id': exerciseId,
       'competence_id': competenceId,
       'answer': answer,
-      if (multipleAnswers != null && multipleAnswers!.isNotEmpty)
-        'multiple_answers': multipleAnswers,
       'is_correct': isCorrect,
       'time_spent_seconds': timeSpentSeconds,
       'hints_used': hintsUsed,
@@ -75,6 +71,8 @@ class EmotionSubmissionData {
   final List<EmotionCaptureData> emotionHistory;
   final bool frustrationDetected;
   final double averageConfidence;
+  final int happyCount;
+  final int sadCount;
 
   EmotionSubmissionData({
     required this.dominantEmotion,
@@ -82,6 +80,8 @@ class EmotionSubmissionData {
     required this.emotionHistory,
     required this.frustrationDetected,
     required this.averageConfidence,
+    this.happyCount = 0,
+    this.sadCount = 0,
   });
 
   /// Factory pour créer à partir des captures du provider
@@ -103,13 +103,25 @@ class EmotionSubmissionData {
     double totalConfidence = 0.0;
     bool hasFrustration = false;
 
+    int happyCount = 0;
+    int sadCount = 0;
+
     for (final capture in captures) {
       emotionCounts[capture.emotion] = (emotionCounts[capture.emotion] ?? 0) + 1;
       totalConfidence += capture.confidence;
 
+      final emotionLower = capture.emotion.toLowerCase();
+      
       // Détection frustration (fear, angry, sad combinés)
-      if (['fear', 'angry', 'sad'].contains(capture.emotion.toLowerCase())) {
+      if (['fear', 'angry', 'sad'].contains(emotionLower)) {
         hasFrustration = true;
+      }
+
+      // Comptage spécifique pour l'exercice
+      if (emotionLower == 'happy') {
+        happyCount++;
+      } else if (emotionLower == 'sad') {
+        sadCount++;
       }
     }
 
@@ -123,6 +135,8 @@ class EmotionSubmissionData {
       emotionHistory: captures,
       frustrationDetected: hasFrustration,
       averageConfidence: totalConfidence / captures.length,
+      happyCount: happyCount,
+      sadCount: sadCount,
     );
   }
 
@@ -133,6 +147,8 @@ class EmotionSubmissionData {
       'emotion_history': emotionHistory.map((e) => e.toJson()).toList(),
       'frustration_detected': frustrationDetected,
       'average_confidence': averageConfidence,
+      'happy_count': happyCount,
+      'sad_count': sadCount,
     };
   }
 }
